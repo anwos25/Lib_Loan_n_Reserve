@@ -1,49 +1,82 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   FlatList,
+  ActivityIndicator,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { rooms } from "../ServiceAPI/API";
+import { Rooms } from "../ServiceAPI/API";
+import RoomCard from "../Component/RoomCard";
+import BookingModal from "../Component/BookingModal";
 
-const BookingScreen = ({ navigation }) => {
-  const [rooms, setRooms] = useState([rooms]);
+const BookingScreen = ({ navigation, route }) => {
+  const name = route?.params?.name || "ผู้ใช้";  // รับค่าชื่อจาก route.params ถ้ามี
+
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState(null);
+
+  const fetchRooms = async () => {
+    setLoading(true);
+    try {
+      const data = await Rooms();
+      console.log("Fetched Rooms:", data);
+      setRooms(data);
+    } catch (error) {
+      console.error("Error fetching rooms:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchRooms();
+    }, [])
+  );
 
   const renderRoomItem = ({ item }) => (
-    <View style={styles.roomItem}>
-      <View style={styles.roomDetails}>
-        <Text style={styles.roomName}>{item.name}</Text>
-        <View style={styles.capacityContainer}>
-          <Ionicons name="people" size={16} color="gray" />
-          <Text style={styles.capacityText}>ความจุ: {item.capacity} คน</Text>
-        </View>
-      </View>
-      <Text style={styles.roomStatus}>{item.status}</Text>
-      <TouchableOpacity style={styles.bookButton}>
-        <Text style={styles.bookButtonText}>จองห้อง</Text>
-      </TouchableOpacity>
-    </View>
+    <RoomCard
+      room={item}
+      onPressBook={() => openModal(item)}
+      style={item.is_available === 0 ? { opacity: 0.3 } : {}}
+    />
   );
+
+  const openModal = (room) => {
+    setSelectedRoom(room);
+    setIsModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleSaveBooking = (startDate, endDate) => {
+    console.log("จองห้อง:", selectedRoom);
+    console.log("เริ่มที่:", startDate);
+    console.log("จบที่:", endDate);
+  };
 
   return (
     <View style={styles.container}>
-      {/* ส่วนหัว */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Rooms</Text>
         <View style={styles.headerIcons}>
           <TouchableOpacity onPress={() => navigation.navigate("Notification")}>
-            <Ionicons name="notifications-outline" size={28} color="white" style={styles.icon}/>
+            <Ionicons name="notifications-outline" size={28} color="white" style={styles.icon} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
-            <Ionicons name="person-circle-outline" size={28} color="white" style={styles.icon}/>
+          <TouchableOpacity onPress={() => navigation.navigate("Profile", { name: name })}>
+            <Ionicons name="person-circle-outline" size={28} color="white" style={styles.icon} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* แถบตัวกรอง */}
       <View style={styles.filterBar}>
         <TouchableOpacity style={styles.filterButton}>
           <Text style={styles.filterButtonText}>ทั้งหมด</Text>
@@ -56,15 +89,20 @@ const BookingScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* รายการห้องที่ว่าง */}
       <View style={styles.roomsList}>
         <Text style={styles.roomsListTitle}>ห้องที่ว่าง ({rooms.length})</Text>
-        {/* <FlatList
-          data={rooms}
-          renderItem={renderRoomItem}
-          keyExtractor={(item) => item.id}
-        /> */}
+        {loading ? (
+          <ActivityIndicator size="large" color="#007AFF" />
+        ) : (
+          <FlatList
+            data={rooms}
+            renderItem={renderRoomItem}
+            keyExtractor={(item, index) => (item.id ? item.id.toString() : index.toString())}
+          />
+        )}
       </View>
+
+      <BookingModal isVisible={isModalVisible} onClose={closeModal} onSave={handleSaveBooking} />
     </View>
   );
 };
@@ -80,7 +118,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     backgroundColor: "#122620",
-    
   },
   headerTitle: {
     fontSize: 22,
@@ -111,45 +148,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 8,
-  },
-  roomItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  roomDetails: {
-    flex: 1,
-  },
-  roomName: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  capacityContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  capacityText: {
-    marginLeft: 4,
-    fontSize: 14,
-    color: "gray",
-  },
-  roomStatus: {
-    fontSize: 16,
-    color: "green",
-  },
-  bookButton: {
-    backgroundColor: "#007AFF",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-  },
-  bookButtonText: {
-    color: "#fff",
-    fontSize: 16,
   },
   icon: {
     marginLeft: 15,

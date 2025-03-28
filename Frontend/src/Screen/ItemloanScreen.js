@@ -4,13 +4,13 @@ import { Ionicons } from "@expo/vector-icons";
 import BorrowEquipmentCard from "../Component/BorrowEquipmentCard";
 import { Items,  } from "../ServiceAPI/API";
 
-const ItemloanScreen = ({ navigation, token }) => {
+const ItemloanScreen = ({ navigation, token,route }) => {
   const [searchText, setSearchText] = useState("");
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [borrowedItems, setBorrowedItems] = useState(new Set());
-
+  const name = route?.params?.name || "ผู้ใช้";
   useEffect(() => {
     fetchItems();
   }, []);
@@ -113,7 +113,7 @@ const ItemloanScreen = ({ navigation, token }) => {
               style={styles.icon}
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.replace("Profile")}>
+          <TouchableOpacity onPress={() => navigation.navigate("Profile",{ name : name })}>
             <Ionicons
               name="person-circle-outline"
               size={28}

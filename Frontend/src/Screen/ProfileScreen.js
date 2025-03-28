@@ -82,7 +82,7 @@ const ProfileScreen = ({ route }) => {
 
       <View style={styles.userInfo}>
         <Text style={styles.userName}>{userData?.name}</Text>
-        <Text style={styles.userPhone}>{userData?.phone}</Text>
+        <Text style={styles.userPhone}>📞 {userData?.phone}</Text>
       </View>
 
       <View style={styles.settings}>
@@ -151,11 +151,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   userName: {
-    fontSize: 52,
+    fontSize: 46,
     fontWeight: 'bold',
   },
   userPhone: {
-    fontSize: 20,
+    fontSize: 18,
     color: 'gray',
   },
   settings: {

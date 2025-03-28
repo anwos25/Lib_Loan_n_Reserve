@@ -15,29 +15,22 @@ const RoomCard = ({ room, roombooking }) => {
         </View>
       </View>
       <Text style={styles.roomStatus}>{room.status}</Text>
-      <TouchableOpacity
-        style={styles.bookButton}
-        onPress={() => setIsVisible(true)}
-      >
+      <TouchableOpacity style={styles.bookButton} onPress={() => setIsVisible(true)}>
         <Text style={styles.bookButtonText}>จองห้อง</Text>
       </TouchableOpacity>
+
+      {/* Modal สำหรับการจองห้อง */}
       <Modal transparent={true} animationType="fade" visible={isVisible}>
         <View style={styles.modalOverlay}>
-          <View style={styles.ModalContainer}>
+          <View style={styles.modalContainer}>
             <Text style={styles.title}>จองห้อง</Text>
             <Text style={styles.msg}>{room.name}</Text>
             <Text style={styles.msg}>ความจุ: {room.capacity} คน</Text>
-            <Text style={styles.msg}>
-              ความจุ: {roombooking.booking_date} คน
-            </Text>
-
-            <TouchableOpacity
-              style={styles.okButton}
-              onPress={() => {
-                setIsVisible(false);
-              }}
-            >
-              {/*<Text style={styles.okButtonText}>เข้าสู่ระบบ</Text>*/}
+            {roombooking?.booking_date && (
+              <Text style={styles.msg}>วันที่จอง: {roombooking.booking_date}</Text>
+            )}
+            <TouchableOpacity style={styles.closeButton} onPress={() => setIsVisible(false)}>
+              <Text style={styles.closeButtonText}>ปิด</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -51,51 +44,51 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 20, // เพิ่ม padding เพื่อให้การ์ดดูใหญ่ขึ้น
-    marginBottom: 12, // เพิ่ม margin bottom เพื่อให้การ์ดมีระยะห่างกัน
-    backgroundColor: "#f9f9f9", // เปลี่ยนสีพื้นหลังเป็นสีอ่อน
-    borderRadius: 12, // เพิ่มขอบโค้งให้การ์ด
+    padding: 20,
+    marginBottom: 12,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 }, // เพิ่มเงาให้การ์ดชัดขึ้น
-    shadowOpacity: 0.15, // ลดความเข้มของเงา
-    shadowRadius: 6, // เพิ่มรัศมีเงา
-    elevation: 4, // เพิ่ม elevation สำหรับ Android
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
   },
   roomDetails: {
     flex: 1,
   },
   roomName: {
-    fontSize: 18, // เพิ่มขนาดตัวอักษรชื่อห้อง
-    fontWeight: "600", // เพิ่มความหนาตัวอักษร
-    color: "#333", // เปลี่ยนสีตัวอักษร
-    marginBottom: 4, // เพิ่ม margin bottom
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 4,
   },
   capacityContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 8, // เพิ่ม margin top
+    marginTop: 8,
   },
   capacityText: {
-    marginLeft: 6, // เพิ่ม margin left
+    marginLeft: 6,
     fontSize: 14,
-    color: "#666", // เปลี่ยนสีตัวอักษร
+    color: "#666",
   },
   roomStatus: {
     fontSize: 16,
-    color: "#28a745", // เปลี่ยนสีสถานะห้องเป็นสีเขียว
-    fontWeight: "500", // เพิ่มความหนาตัวอักษร
+    color: "#28a745",
+    fontWeight: "500",
     margin: 20,
   },
   bookButton: {
-    backgroundColor: "#007bff", // เปลี่ยนสีปุ่ม
-    paddingVertical: 10, // เพิ่ม padding vertical
-    paddingHorizontal: 20, // เพิ่ม padding horizontal
-    borderRadius: 25, // เพิ่มขอบโค้งให้ปุ่ม
+    backgroundColor: "#122620",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 25,
   },
   bookButtonText: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "600", // เพิ่มความหนาตัวอักษร
+    fontWeight: "600",
   },
   modalOverlay: {
     flex: 1,
@@ -103,7 +96,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(0,0,0,0.5)",
   },
-  ModalContainer: {
+  modalContainer: {
     width: 350,
     backgroundColor: "#fff",
     borderRadius: 10,
@@ -117,17 +110,17 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   msg: {
-    fontSize: 20,
+    fontSize: 18,
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 15,
   },
-  okButton: {
-    backgroundColor: "#4caf50",
+  closeButton: {
+    backgroundColor: "#dc3545",
     paddingVertical: 10,
     paddingHorizontal: 20,
-    bordarRadius: 5,
+    borderRadius: 5,
   },
-  okButtonText: {
+  closeButtonText: {
     fontSize: 18,
     color: "#fff",
     fontWeight: "bold",

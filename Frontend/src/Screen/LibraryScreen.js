@@ -42,11 +42,11 @@ const LibraryScreen = ({ route }) => {
       </View>
 
       <View style={styles.buttonsContainer}>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Rooms")}>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Rooms", { name : name })}>
           <Ionicons name="home-outline" size={30} color="#122620" />
           <Text style={styles.buttonText}>จองห้อง</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Items")}>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Items", { name : name })}>
           <Ionicons name="briefcase-outline" size={30} color="#122620" />
           <Text style={styles.buttonText}>ยืมอุปกรณ์</Text>
         </TouchableOpacity>

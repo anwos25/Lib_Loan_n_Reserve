@@ -40,12 +40,16 @@ const LoginScreen = () => {
       setModalType("success");
       setModalVisible(true);
   
-      // Set a delay to show the modal for a longer time
       setTimeout(() => {
-        // Pass the username and userId to the Library screen
-        navigation.navigate("Main", {
-          screen: "Library",
-          params: { name: username, user_id: userId }, // Passing user_id along with name
+        // ส่งข้อมูลที่ต้องการไปยัง MainTabNavigator
+        navigation.reset({
+          index: 0, // Reset the navigation stack
+          routes: [
+            {
+              name: "Main",
+              params: { name: username, user_id: userId }, // ส่ง params
+            },
+          ],
         });
       }, 300);
   
@@ -66,6 +70,7 @@ const LoginScreen = () => {
   
     setLoading(false);
   };
+  
   
   return (
     <View style={styles.container}>

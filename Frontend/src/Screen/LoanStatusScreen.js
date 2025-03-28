@@ -5,10 +5,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { GetCurrentLoans } from '../ServiceAPI/API';
 import { useFocusEffect } from '@react-navigation/native';
 
-const LoanStatusContent = ({ token }) => {
+const LoanStatusContent = ({ token,route}) => {
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+ const name = route?.params?.name || "ผู้ใช้";
+  
 
   const fetchCurrentLoans = async () => {
     try {
@@ -112,13 +114,14 @@ const renderLoanItem = ({ item }) => (
   </View>
 );
 
-const LoanStatusScreen = ({ navigation, token }) => {
+const LoanStatusScreen = ({ navigation, token ,route}) => {
   const [index, setIndex] = useState(0);
   const [routes] = useState([
     { key: 'first', title: 'กำลังยืม' },
     { key: 'second', title: 'ประวัติการยืม' },
     { key: 'third', title: 'การจองคิว' },
   ]);
+  const name = route?.params?.name || "ผู้ใช้";
 
   const renderScene = ({ route }) => {
     switch (route.key) {
@@ -158,7 +161,7 @@ const LoanStatusScreen = ({ navigation, token }) => {
           <TouchableOpacity onPress={() => navigation.navigate('Notification')}>
             <Ionicons name="notifications-outline" size={28} color="white" style={styles.icon} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+          <TouchableOpacity onPress={() => navigation.navigate("Profile",{ name : name })}>
             <Ionicons name="person-circle-outline" size={28} color="white" style={styles.icon} />
           </TouchableOpacity>
         </View>
