@@ -1,9 +1,82 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Picker } from '@react-native-picker/picker';
+
+const generateTimeSlots = () => {
+  const times = [];
+  for (let hour = 8; hour <= 22; hour++) {
+    for (let min of [0, 30]) {
+      times.push(`${hour.toString().padStart(2, "0")}:${min === 0 ? "00" : "30"}`);
+    }
+  }
+  return times;
+};
+
+const timeOptions = generateTimeSlots();
+
+const BookingModal = ({ isVisible, onClose, onSave, room }) => {
+  const [startTimeIndex, setStartTimeIndex] = useState(0);
+  const [endTimeIndex, setEndTimeIndex] = useState(1);
+
+  const handleSave = () => {
+    onSave(timeOptions[startTimeIndex], timeOptions[endTimeIndex]);
+    onClose();
+  };
+
+  return (
+    <Modal transparent={true} animationType="fade" visible={isVisible}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          <Text style={styles.title}>จองห้อง</Text>
+          <Text style={styles.msg}>{room.name}</Text>
+          <Text style={styles.msg}>ความจุ: {room.capacity} คน</Text>
+          
+          {/* เลือกเวลาเริ่ม */}
+          <Text style={styles.label}>เวลาเริ่ม:</Text>
+          <Picker
+            selectedValue={startTimeIndex}
+            onValueChange={(itemValue) => setStartTimeIndex(itemValue)}
+            style={styles.picker}
+          >
+            {timeOptions.map((time, index) => (
+              <Picker.Item key={index} label={time} value={index} />
+            ))}
+          </Picker>
+
+          {/* เลือกเวลาจบ */}
+          <Text style={styles.label}>เวลาจบ:</Text>
+          <Picker
+            selectedValue={endTimeIndex}
+            onValueChange={(itemValue) => setEndTimeIndex(itemValue)}
+            style={styles.picker}
+          >
+            {timeOptions.slice(startTimeIndex + 1).map((time, index) => (
+              <Picker.Item key={index + startTimeIndex + 1} label={time} value={index + startTimeIndex + 1} />
+            ))}
+          </Picker>
+
+          {/* ปุ่มบันทึกและปิด */}
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+            <Text style={styles.saveButtonText}>บันทึกการจอง</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <Text style={styles.closeButtonText}>ปิด</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+};
 
 const RoomCard = ({ room, roombooking }) => {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [bookingDetails, setBookingDetails] = useState(null);
+
+  const handleBookingSave = (startTime, endTime) => {
+    setBookingDetails({ startTime, endTime });
+  };
 
   return (
     <View style={styles.card}>
@@ -15,26 +88,25 @@ const RoomCard = ({ room, roombooking }) => {
         </View>
       </View>
       <Text style={styles.roomStatus}>{room.status}</Text>
-      <TouchableOpacity style={styles.bookButton} onPress={() => setIsVisible(true)}>
+      <TouchableOpacity style={styles.bookButton} onPress={() => setIsModalVisible(true)}>
         <Text style={styles.bookButtonText}>จองห้อง</Text>
       </TouchableOpacity>
 
-      {/* Modal สำหรับการจองห้อง */}
-      <Modal transparent={true} animationType="fade" visible={isVisible}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.title}>จองห้อง</Text>
-            <Text style={styles.msg}>{room.name}</Text>
-            <Text style={styles.msg}>ความจุ: {room.capacity} คน</Text>
-            {roombooking?.booking_date && (
-              <Text style={styles.msg}>วันที่จอง: {roombooking.booking_date}</Text>
-            )}
-            <TouchableOpacity style={styles.closeButton} onPress={() => setIsVisible(false)}>
-              <Text style={styles.closeButtonText}>ปิด</Text>
-            </TouchableOpacity>
-          </View>
+      {/* Booking Modal */}
+      <BookingModal
+        isVisible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        onSave={handleBookingSave}
+        room={room}
+      />
+      
+      {/* แสดงข้อมูลการจองห้อง */}
+      {bookingDetails && (
+        <View style={styles.bookingInfo}>
+          <Text>เวลาเริ่ม: {bookingDetails.startTime}</Text>
+          <Text>เวลาจบ: {bookingDetails.endTime}</Text>
         </View>
-      </Modal>
+      )}
     </View>
   );
 };
@@ -114,16 +186,43 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 15,
   },
+  label: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginTop: 10,
+  },
+  picker: {
+    height: 50,
+    width: 200,
+    marginTop: 5,
+  },
+  saveButton: {
+    backgroundColor: "#007AFF",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginTop: 10,
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 16,
+  },
   closeButton: {
-    backgroundColor: "#dc3545",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
+    backgroundColor: "gray",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginTop: 10,
   },
   closeButtonText: {
-    fontSize: 18,
     color: "#fff",
-    fontWeight: "bold",
+    fontSize: 16,
+  },
+  bookingInfo: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: "#f1f1f1",
+    borderRadius: 8,
   },
 });
 

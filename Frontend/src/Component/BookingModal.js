@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Modal,
 } from "react-native";
+import { Picker } from '@react-native-picker/picker';
 
 const generateTimeSlots = () => {
   const times = [];
@@ -41,43 +42,27 @@ const BookingModal = ({ isVisible, onClose, onSave }) => {
 
           {/* เลือกเวลาเริ่ม */}
           <Text style={styles.label}>เวลาเริ่ม:</Text>
-          <View style={styles.timeSelector}>
-            <TouchableOpacity
-              onPress={() => setStartTimeIndex(Math.max(0, startTimeIndex - 1))}
-              style={styles.timeButton}
-            >
-              <Text style={styles.buttonText}>-</Text>
-            </TouchableOpacity>
-            <Text style={styles.timeText}>{timeOptions[startTimeIndex]}</Text>
-            <TouchableOpacity
-              onPress={() =>
-                setStartTimeIndex(Math.min(timeOptions.length - 2, startTimeIndex + 1))
-              }
-              style={styles.timeButton}
-            >
-              <Text style={styles.buttonText}>+</Text>
-            </TouchableOpacity>
-          </View>
+          <Picker
+            selectedValue={startTimeIndex}
+            onValueChange={(itemValue) => setStartTimeIndex(itemValue)}
+            style={styles.picker}
+          >
+            {timeOptions.map((time, index) => (
+              <Picker.Item key={index} label={time} value={index} />
+            ))}
+          </Picker>
 
           {/* เลือกเวลาจบ */}
           <Text style={styles.label}>เวลาจบ:</Text>
-          <View style={styles.timeSelector}>
-            <TouchableOpacity
-              onPress={() => setEndTimeIndex(Math.max(startTimeIndex + 1, endTimeIndex - 1))}
-              style={styles.timeButton}
-            >
-              <Text style={styles.buttonText}>-</Text>
-            </TouchableOpacity>
-            <Text style={styles.timeText}>{timeOptions[endTimeIndex]}</Text>
-            <TouchableOpacity
-              onPress={() =>
-                setEndTimeIndex(Math.min(timeOptions.length - 1, endTimeIndex + 1))
-              }
-              style={styles.timeButton}
-            >
-              <Text style={styles.buttonText}>+</Text>
-            </TouchableOpacity>
-          </View>
+          <Picker
+            selectedValue={endTimeIndex}
+            onValueChange={(itemValue) => setEndTimeIndex(itemValue)}
+            style={styles.picker}
+          >
+            {timeOptions.slice(startTimeIndex + 1).map((time, index) => (
+              <Picker.Item key={index + startTimeIndex + 1} label={time} value={index + startTimeIndex + 1} />
+            ))}
+          </Picker>
 
           {/* ปุ่มบันทึกและปิด */}
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
@@ -117,29 +102,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginTop: 10,
   },
-  timeSelector: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+  picker: {
+    height: 50,
+    width: 200,
     marginTop: 5,
   },
-  timeButton: {
-    backgroundColor: "#007AFF",
-    padding: 10,
-    borderRadius: 10,
-    marginHorizontal: 10,
-  },
-  buttonText: {
-    color: "white",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  timeText: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
   saveButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#122620",
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
