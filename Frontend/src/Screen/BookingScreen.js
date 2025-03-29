@@ -12,14 +12,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { Rooms } from "../ServiceAPI/API";
 import RoomCard from "../Component/RoomCard";
 import BookingModal from "../Component/BookingModal";
+import { Calendar } from "react-native-calendars";
 
 const BookingScreen = ({ navigation, route }) => {
-  const name = route?.params?.name || "ผู้ใช้";  // รับค่าชื่อจาก route.params ถ้ามี
+  const name = route?.params?.name || "ผู้ใช้"; // รับค่าชื่อจาก route.params ถ้ามี
 
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(""); // Date selection state
 
   const fetchRooms = async () => {
     setLoading(true);
@@ -44,7 +46,7 @@ const BookingScreen = ({ navigation, route }) => {
     <RoomCard
       room={item}
       onPressBook={() => openModal(item)}
-      style={item.is_available === 0 ? { opacity: 0.3 } : {}}
+      style={item.is_available === 0 ? { opacity: 0.3 } : {}} // ปรับ opacity สำหรับห้องที่ไม่ว่าง
     />
   );
 
@@ -59,6 +61,7 @@ const BookingScreen = ({ navigation, route }) => {
 
   const handleSaveBooking = (startDate, endDate) => {
     console.log("จองห้อง:", selectedRoom);
+    console.log("วันที่เลือก:", selectedDate); // Display selected date
     console.log("เริ่มที่:", startDate);
     console.log("จบที่:", endDate);
   };
@@ -89,20 +92,46 @@ const BookingScreen = ({ navigation, route }) => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.roomsList}>
-        <Text style={styles.roomsListTitle}>ห้องที่ว่าง ({rooms.length})</Text>
-        {loading ? (
-          <ActivityIndicator size="large" color="#007AFF" />
-        ) : (
-          <FlatList
-            data={rooms}
-            renderItem={renderRoomItem}
-            keyExtractor={(item, index) => (item.id ? item.id.toString() : index.toString())}
-          />
-        )}
+      <View style={styles.calendarContainer}>
+        <Text style={styles.calendarTitle}>เลือกวันที่:</Text>
+        <Calendar
+          onDayPress={(day) => setSelectedDate(day.dateString)} // Save the selected date
+          markedDates={{
+            [selectedDate]: {
+              selected: true,
+              selectedColor: "#B68D40",
+              selectedTextColor: "white",
+            },
+          }}
+        />
       </View>
 
-      <BookingModal isVisible={isModalVisible} onClose={closeModal} onSave={handleSaveBooking} />
+      {selectedDate ? (
+        <View style={styles.roomsList}>
+          <Text style={styles.roomsListTitle}>
+            ห้องที่ว่างสำหรับวันที่ {selectedDate} ({rooms.length})
+          </Text>
+          {loading ? (
+            <ActivityIndicator size="large" color="#007AFF" />
+          ) : rooms.length > 0 ? (
+            <FlatList
+              data={rooms}
+              renderItem={renderRoomItem}
+              keyExtractor={(item, index) => (item.id ? item.id.toString() : index.toString())}
+            />
+          ) : (
+            <Text>ไม่พบห้องที่ว่างในวันที่เลือก</Text>
+          )}
+        </View>
+      ) : (
+        <Text style={styles.roomsListTitle}>กรุณาเลือกวันที่ก่อน</Text>
+      )}
+
+      <BookingModal
+        isVisible={isModalVisible}
+        onClose={closeModal}
+        onSave={handleSaveBooking}
+      />
     </View>
   );
 };
@@ -140,6 +169,16 @@ const styles = StyleSheet.create({
   },
   filterButtonText: {
     fontSize: 16,
+  },
+  calendarContainer: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderColor: "#ddd",
+  },
+  calendarTitle: {
+    fontSize: 16,
+    marginBottom: 10,
+    fontWeight: "bold",
   },
   roomsList: {
     padding: 16,

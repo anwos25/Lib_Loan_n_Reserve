@@ -17,18 +17,21 @@ export const RegisterUser = async (name, username, phone, password) => {
   }
 };
 
-// LoginUser remains the same, only username and password needed
 export const LoginUser = async (username, password) => {
   try {
     const response = await axios.post(`${API_URL}/login`, {
       username,
       password,
     });
-    return response.data.token;
+
+    // ✅ ตอนนี้ return ทั้ง object { token, user: { id, name }, message }
+    return response.data;
+
   } catch (error) {
     throw new Error(error.response?.data?.message || "Error login");
   }
 };
+
 
 // Fetching current loans
 export const GetCurrentLoans = async (token) => {
@@ -90,4 +93,6 @@ export const Users = async () => {
   } catch (error) {
     throw new Error(error.response?.data?.message || "Error fetching users");
   }
+
+  
 }

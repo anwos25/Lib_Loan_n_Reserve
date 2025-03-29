@@ -39,7 +39,7 @@ const ProfileScreen = ({ route }) => {
           setError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
         } finally {
           setLoading(false);
-        }
+        } 
       };
 
       fetchUserData();

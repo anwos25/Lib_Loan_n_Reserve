@@ -1,3 +1,5 @@
+
+
 import React, { useState } from "react";
 import {
   View,
@@ -27,51 +29,53 @@ const LoginScreen = () => {
       setModalVisible(true);
       return;
     }
-  
+
     setLoading(true);
-  
+
     try {
-      const token = await LoginUser(username, password);
-      const userId = token?.userId;  // Assuming `token` contains the `userId`
-  
-      console.log("Login successful. Token:", token);
-  
+      const result = await LoginUser(username, password); // <-- Login API
+      const userId = result?.user?.id;
+      const name = result?.user?.name;
+
+      console.log("Login result:", result);
+
+      if (!userId) {
+        throw new Error("ไม่พบ user_id จากเซิร์ฟเวอร์");
+      }
+
       setModalMessage("เข้าสู่ระบบเรียบร้อย");
       setModalType("success");
       setModalVisible(true);
-  
+
       setTimeout(() => {
-        // ส่งข้อมูลที่ต้องการไปยัง MainTabNavigator
         navigation.reset({
-          index: 0, // Reset the navigation stack
+          index: 0,
           routes: [
             {
               name: "Main",
-              params: { name: username, user_id: userId }, // ส่ง params
+              params: { name, user_id: userId }, // ✅ ส่ง user_id และ name ไป Main
             },
           ],
         });
       }, 300);
-  
     } catch (error) {
       setLoading(false);
-  
+
       console.log("Login Error:", error);
-  
+
       let errorMessage = "เข้าสู่ระบบไม่สำเร็จ";
       if (error.response) {
         errorMessage = error.response?.data?.message || errorMessage;
       }
-  
+
       setModalMessage(errorMessage);
       setModalType("error");
       setModalVisible(true);
     }
-  
+
     setLoading(false);
   };
-  
-  
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
@@ -94,7 +98,7 @@ const LoginScreen = () => {
         disabled={loading}
       >
         {loading ? (
-          <Text style={styles.buttonText}>กำลังเข้าสู่ระบบ...</Text> // Show loading text
+          <Text style={styles.buttonText}>กำลังเข้าสู่ระบบ...</Text>
         ) : (
           <>
             <Ionicons name="log-in" size={20} color="#fff" />
@@ -106,12 +110,11 @@ const LoginScreen = () => {
         <Text style={styles.link}>ยังไม่มีบัญชี? ลงทะเบียน</Text>
       </TouchableOpacity>
 
-      {/* AlertModal component for showing messages */}
       <AlertModal
         isVisible={modalVisible}
         message={modalMessage}
         type={modalType}
-        onClose={() => setModalVisible(false)} // Close modal on button click
+        onClose={() => setModalVisible(false)}
       />
     </View>
   );

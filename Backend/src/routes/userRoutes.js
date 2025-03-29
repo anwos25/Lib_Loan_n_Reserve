@@ -1,6 +1,7 @@
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
-import { runQuery, allQuery } from "../models/queries.js";
+import { getQuery,runQuery, allQuery } from "../models/queries.js";
+
 
 export const registerUser = async (req, res) => {
   try {
@@ -42,7 +43,10 @@ export const loginUser = async (req, res) => {
       "secret",
       { expiresIn: "15m" }
     );
-    res.status(200).json({ message: "Login successful", token });
+    res.status(200).json({ message: "Login successful", token ,user: {
+      id: user[0].id,
+      name: user[0].name
+    }});
   } catch (error) {
     res.status(500).json({ message: "Error logging in", error: error.message });
   }
@@ -412,18 +416,56 @@ export const updateSettings = async (req, res) => {
   }
 };
 
+// export const loanItems = async (req, res) => {
+//   const { user_id, item_id, quantity, borrow_date, return_date } = req.body;
+
+//   console.log("REQ BODY:", req.body); // ✅ แสดงข้อมูลที่ส่งมา
+//   try {
+//     const sql = `
+//       INSERT INTO Loans (user_id, item_id, quantity, borrow_date, due_date, status)
+//       VALUES (?, ?, ?, ?, ?, 'borrowed')
+//     `;
+//     await runQuery(sql, [user_id, item_id, quantity, borrow_date, return_date]);
+
+//     const updateQtySql = `
+//       UPDATE Items SET available_quantity = available_quantity - ? WHERE id = ?
+//     `;
+//     await runQuery(updateQtySql, [quantity, item_id]);
+
+//     console.log("✅ ยืมสำเร็จและอัปเดตจำนวนแล้ว");
+//     res.json({ message: "ยืมสำเร็จ!" });
+//   } catch (error) {
+//     console.error("❌ ERROR:", error.message); // ✅ log error
+//     res.status(500).json({ message: "เกิดข้อผิดพลาด", error: error.message });
+//   }
+// };
+
 export const loanItems = async (req, res) => {
+  const { user_id, item_id, borrow_date, return_date } = req.body;
+
+  console.log("REQ BODY:", req.body);
+
   try {
-    const { user_id, item_id, quantity, borrow_date, return_date } = req.body;
-    const sql = `INSERT INTO Loans (user_id, item_id, quantity, borrow_date, return_date) VALUES (?, ?, ?, ?, ?)`;
-    await runQuery(sql, [user_id, item_id, quantity, borrow_date, return_date]);
-    res.json({ message: "Items loaned successfully" });
+    const sql = `
+      INSERT INTO Loans (user_id, item_id, borrow_date, due_date, status)
+      VALUES (?, ?, ?, ?, 'borrowed')
+    `;
+    await runQuery(sql, [user_id, item_id, borrow_date, return_date]);
+
+    // ✅ หักจำนวน 1 ชิ้นจาก item (เพราะไม่มี quantity แล้ว)
+    const updateQtySql = `
+      UPDATE Items SET available_quantity = available_quantity - 1 WHERE id = ?
+    `;
+    await runQuery(updateQtySql, [item_id]);
+
+    console.log("✅ ยืมสำเร็จและอัปเดตจำนวนแล้ว");
+    res.json({ message: "ยืมสำเร็จ!" });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error loaning items", error: error.message });
+    console.error("❌ ERROR:", error.message);
+    res.status(500).json({ message: "เกิดข้อผิดพลาด", error: error.message });
   }
 };
+
 
 export const getUser = async (req, res) => {
   try {
@@ -450,6 +492,33 @@ export const getUser = async (req, res) => {
   } catch (error) {
     console.error("Error getting user:", error.message);  // Log error details
     res.status(500).json({ message: "Error getting user", error: error.message });
+  }
+};
+
+
+export const getBorrowedItems = async (req, res) => {
+  const { user_id } = req.params;
+
+  console.log("Received user_id:", user_id); // เพิ่ม log เพื่อตรวจสอบค่า user_id
+
+  try {
+    const sql = `
+      SELECT L.id AS loan_id, I.name, L.borrow_date, L.due_date
+      FROM Loans L
+      JOIN Items I ON L.item_id = I.id
+      WHERE L.user_id = ? AND L.status = 'borrowed'
+    `;
+    const rows = await getQuery(sql, [user_id]);
+
+    console.log("Rows returned from database:", rows);
+
+    if (rows.length === 0) {
+      res.status(404).json({ message: "No borrowed items found" });
+    } else {
+      res.json(rows);
+    }
+  } catch (error) {
+    res.status(500).json({ message: "ไม่สามารถโหลดข้อมูลกำลังยืม", error: error.message });
   }
 };
 

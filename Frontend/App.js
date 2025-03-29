@@ -11,6 +11,7 @@ import ProfileScreen from "./src/Screen/ProfileScreen";
 import NotificationScreen from "./src/Screen/NotificationScreen";
 import LoanStatusScreen from "./src/Screen/LoanStatusScreen";
 import { Ionicons } from "@expo/vector-icons";
+import ReservationStatusScreen from "./src/Screen/ReservationStatusScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -77,6 +78,8 @@ function MainTabNavigator({ route }) {
             iconName = focused ? "albums" : "albums-outline";
           } else if (route.name === "Loans") {
             iconName = focused ? "book" : "book-outline";
+          } else if (route.name === "ReservationStatus") {
+            iconName = focused ? "checkmark" : "checkmark-outline";
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -105,6 +108,12 @@ function MainTabNavigator({ route }) {
       <Tab.Screen
         name="Loans"
         component={LoanStatusScreen}
+        initialParams={{ name, user_id }}
+        options={{ headerStyle: { height: 40 } }}
+      />
+      <Tab.Screen
+        name="ReservationStatus"
+        component={ReservationStatusScreen}
         initialParams={{ name, user_id }}
         options={{ headerStyle: { height: 40 } }}
       />

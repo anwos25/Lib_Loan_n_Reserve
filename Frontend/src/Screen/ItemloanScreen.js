@@ -1,10 +1,16 @@
+import axios from "axios";
+const API_URL = "http://192.168.100.2:5000"
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import BorrowEquipmentCard from "../Component/BorrowEquipmentCard";
 import { Items,  } from "../ServiceAPI/API";
 
+
+
 const ItemloanScreen = ({ navigation, token,route }) => {
+  const user_id = route?.params?.user_id;
+  console.log("🧪 user_id ที่รับจาก route:", user_id); 
   const [searchText, setSearchText] = useState("");
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,56 +34,68 @@ const ItemloanScreen = ({ navigation, token,route }) => {
   };
 
   const handleBorrowRequest = async (item) => {
+    console.log("ส่งข้อมูล:", {
+      user_id,
+      item_id: item.id,
+      quantity: 1,
+      borrow_date: new Date().toISOString().split("T")[0],
+      // คำนวณ return_date เป็น 15 วันจากวันนี้
+      return_date: (() => {
+        const today = new Date();
+        const returnDate = new Date(today);
+        returnDate.setDate(today.getDate() + 15); // เพิ่ม 15 วัน
+        return returnDate.toISOString().split("T")[0]; // คืนวันที่
+      })(),
+    });
     const isAvailable = item.available_quantity > 0;
-
+  
     if (borrowedItems.has(item.id)) {
-      // ยกเลิกการยืมหรือการจอง
-      setBorrowedItems(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(item.id);
-        return newSet;
-      });
-      Alert.alert(
-        "ยกเลิกสำเร็จ",
-        `ยกเลิก${isAvailable ? 'การยืม' : 'การจอง'}${item.name} แล้ว`,
-        [{ text: "ตกลง" }]
-      );
+      // ถ้ากดยืมซ้ำ → ยกเลิกการเลือก
+      const updatedSet = new Set(borrowedItems);
+      updatedSet.delete(item.id);
+      setBorrowedItems(updatedSet);
     } else {
       try {
-        // เรียก API สำหรับการยืม
-       
-        
-        // อัพเดท UI
-        setBorrowedItems(prev => new Set([...prev, item.id]));
-        
+        // ✅ POST ไปยัง backend เพื่อยืม
+        await axios.post(`${API_URL}/loans`, {
+          user_id,  // 🛠 แนะนำดึงจาก token หรือ route.params
+          item_id: item.id,
+          quantity: 1,
+          borrow_date: new Date().toISOString().split("T")[0],
+          return_date: new Date(Date.now() + 15 * 86400000).toISOString().split("T")[0], // คืนใน 15 วัน
+        });
+  
+        // ✅ เพิ่ม item นี้เข้า set ที่แสดงว่ายืมแล้ว
+        setBorrowedItems((prev) => new Set([...prev, item.id]));
+  
+        // ✅ แสดง Alert ตามสถานะของอุปกรณ์
         if (isAvailable) {
-          Alert.alert(
-            "ยืมสำเร็จ",
-            "กรุณาติดต่อเจ้าหน้าที่เพื่อรับ" + item.name,
-            [{ 
+          Alert.alert("ยืมสำเร็จ", `กรุณาติดต่อเจ้าหน้าที่เพื่อรับ "${item.name}"`, [
+            {
               text: "ตกลง",
-              onPress: () => navigation.navigate('Loans')  // นำทางไปยังหน้า Loans
-            }]
-          );
+              onPress: () => navigation.navigate("Loans"),
+            },
+          ]);
         } else {
-          Alert.alert(
-            "จองสำเร็จ",
-            "จองอุปกรณ์" + item.name + " เรียบร้อยแล้ว",
-            [{ 
+          Alert.alert("จองสำเร็จ", `คุณได้จอง "${item.name}" แล้ว`, [
+            {
               text: "ตกลง",
-              onPress: () => navigation.navigate('Loans')  // นำทางไปยังหน้า Loans
-            }]
-          );
+              onPress: () => navigation.navigate("Loans"),
+            },
+          ]);
         }
       } catch (error) {
+        console.error("❌ ยืมล้มเหลว:", error);
         Alert.alert(
           "เกิดข้อผิดพลาด",
-          error.message,
+          error.response?.data?.message || "ไม่สามารถยืมอุปกรณ์ได้ในขณะนี้",
           [{ text: "ตกลง" }]
         );
       }
     }
   };
+  
+  
 
   const filteredEquipment = equipment.filter(item =>
     item.name.toLowerCase().startsWith(searchText.toLowerCase())

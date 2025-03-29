@@ -1,5 +1,3 @@
-
-
 import express from "express";
 import cors from "cors";
 import { initDB } from "./src/models/db.js";
@@ -23,7 +21,9 @@ import {
   updateSettings,
   getUser,
   loanItems,
+  getBorrowedItems,
 } from "./src/routes/userRoutes.js";
+
 
 const app = express();
 const port = 5000;
@@ -82,6 +82,10 @@ app.post(
   ]),
   loanItems
 );
+
+app.get("/loans/borrowed/:user_id", getBorrowedItems);
+
+
 app.get("/items", getItems);
 app.get("/queue/:itemId", getQueue);
 app.get("/loans/:userId", getLoans); // กำลังแก้
