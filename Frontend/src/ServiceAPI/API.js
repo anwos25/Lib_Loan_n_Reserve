@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://192.168.251.127:5000";
+const API_URL = "http://192.168.100.2:5000";
 
 // Updated RegisterUser function to accept name, username, phone, and password
 export const RegisterUser = async (name, username, phone, password) => {
