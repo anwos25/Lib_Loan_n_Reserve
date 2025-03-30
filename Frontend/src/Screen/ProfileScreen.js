@@ -26,7 +26,7 @@ const ProfileScreen = ({ route }) => {
             throw new Error("Name query parameter is required");
           }
 
-          const response = await axios.get(`http://192.168.100.2:5000/user`, {
+          const response = await axios.get(`http://192.168.1.121:5000/user`, {
             params: { name }
           });
 

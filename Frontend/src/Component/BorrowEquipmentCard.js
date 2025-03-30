@@ -30,22 +30,6 @@ const BorrowEquipmentCard = ({ equipmentData, onBorrowPress }) => {
   );
 };
 
-const handleBorrow = async () => {
-  try {
-    const response = await axios.post(`${API_URL}/loans`, {
-      user_id: 1, // 🔁 เปลี่ยนให้เป็น user จริง ๆ จาก token หรือ state
-      item_id: equipmentData.id,
-      quantity: 1, // 🔁 สามารถเลือกให้ผู้ใช้ระบุจำนวนได้ภายหลัง
-      borrow_date: new Date().toISOString().split('T')[0], // วันที่ยืมวันนี้
-      return_date: new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0], // คืนในอีก 3 วัน
-    });
-
-    Alert.alert("ยืมสำเร็จ", response.data.message);
-  } catch (error) {
-    console.error("ยืมไม่สำเร็จ", error.response?.data || error.message);
-    Alert.alert("เกิดข้อผิดพลาด", error.response?.data?.message || "ไม่สามารถยืมได้");
-  }
-};
 
 const styles = StyleSheet.create({
   card: {

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://192.168.100.2:5000";
+const API_URL = "http://192.168.1.121:5000";
 
 // Updated RegisterUser function to accept name, username, phone, and password
 export const RegisterUser = async (name, username, phone, password) => {
@@ -34,20 +34,28 @@ export const LoginUser = async (username, password) => {
 
 
 // Fetching current loans
-export const GetCurrentLoans = async (token) => {
+// Modify the API call to accept user_id and pass it to the backend API
+export const GetCurrentLoans = async (token, user_id) => {
   try {
-    const response = await axios.get(`${API_URL}/loans/current`, {
+    const response = await fetch(`http://192.168.1.121:5000/loans/borrowed/${user_id}`, {
+      method: 'GET',
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
     });
-    return response.data;
+    const data = await response.json();
+    if (response.ok) {
+      return data; // Return the response data
+    } else {
+      throw new Error(data.message || 'Something went wrong');
+    }
   } catch (error) {
-    throw new Error(error.response?.data?.message || "Error fetching current loans");
+    console.error('Error fetching loan data:', error);
+    throw error;
   }
 };
 
-// Fetching rooms (remains the same)
 export const Rooms = async () => {
   try {
     const response = await axios.get(`${API_URL}/rooms`);
@@ -93,6 +101,48 @@ export const Users = async () => {
   } catch (error) {
     throw new Error(error.response?.data?.message || "Error fetching users");
   }
+};
 
-  
-}
+export const GetLoans = async (userId) => {
+  try {
+    const response = await axios.get(`${API_URL}/loans/${userId}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Error fetching loans");
+  }
+};
+export const addLoan = async (
+  user_id,
+  item_id,
+  status,
+  borrow_date,
+  return_date,
+  token
+) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/add-loan`,
+      { user_id, item_id, status, borrow_date, return_date },
+      {
+        headers: { Authorization: `Bearer ${token}` }, // ใช้ token สำหรับการยืนยันตัวตน
+      }
+    );
+    return response.data; // ส่งคืนข้อมูลการเพิ่มการยืม
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Error adding loan");
+  }
+};
+export const returnLoan = async (loan_id, item_id, token) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/return-loan`,
+      { loan_id, item_id ,token },
+      {
+        headers: { Authorization: `Bearer ${token}` }, // token ต้องส่งไปที่ API
+      }
+    );
+    return response.data; // ส่งคืนข้อมูลการคืนอุปกรณ์
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Error returning loan");
+  }
+};

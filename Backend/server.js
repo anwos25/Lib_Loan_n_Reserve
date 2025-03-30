@@ -22,7 +22,9 @@ import {
   getUser,
   loanItems,
   getBorrowedItems,
+  addLoan,
 } from "./src/routes/userRoutes.js";
+import { returnLoan } from "./src/routes/userRoutes.js";
 
 
 const app = express();
@@ -88,7 +90,7 @@ app.get("/loans/borrowed/:user_id", getBorrowedItems);
 
 app.get("/items", getItems);
 app.get("/queue/:itemId", getQueue);
-app.get("/loans/:userId", getLoans); // กำลังแก้
+app.get("/loans/:userId", getLoans);
 app.get("/notifications/:userId", getNotifications);
 app.post(
   "/notifications/send",
@@ -130,3 +132,20 @@ app.post('/update-settings', async (req, res) => {
     res.status(500).json({ error: 'Failed to update settings' });
   }
 });
+app.post(
+  "/add-loan",
+  validateFields([
+    "user_id",
+    "item_id",
+    "status",
+    "borrow_date",
+    "return_date",
+  ]),
+  addLoan
+);
+
+app.post(
+  "/return-loan",
+  validateFields(["loan_id", "item_id"]),
+  returnLoan
+);

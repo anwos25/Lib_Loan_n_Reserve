@@ -59,7 +59,9 @@ export default function App() {
 }
 
 function MainTabNavigator({ route }) {
-  const { name, user_id } = route.params || {}; // รับค่าจาก LoginScreen
+  const { name, user_id, token } = route.params || {}; // รับค่าจาก LoginScreen
+
+  console.log("MainTabNavigator received params:", { name, user_id, token });
 
   if (!name) {
     console.error("Name is undefined. Ensure it's passed correctly from the LoginScreen.");
@@ -90,33 +92,34 @@ function MainTabNavigator({ route }) {
       <Tab.Screen
         name="Library"
         component={LibraryScreen}
-        initialParams={{ name, user_id }} // ส่งค่าที่รับมาจาก LoginScreen
+        initialParams={{ name, user_id, token }}
         options={{ headerStyle: { height: 40 } }}
       />
       <Tab.Screen
         name="Rooms"
         component={BookingScreen}
-        initialParams={{ name, user_id }}
+        initialParams={{ name, user_id, token }}
         options={{ headerStyle: { height: 40 } }}
       />
       <Tab.Screen
         name="Items"
         component={ItemloanScreen}
-        initialParams={{ name, user_id }}
+        initialParams={{ name, user_id, token }}
         options={{ headerStyle: { height: 40 } }}
       />
       <Tab.Screen
         name="Loans"
         component={LoanStatusScreen}
-        initialParams={{ name, user_id }}
+        initialParams={{ name, user_id, token }}
         options={{ headerStyle: { height: 40 } }}
       />
       <Tab.Screen
         name="ReservationStatus"
         component={ReservationStatusScreen}
-        initialParams={{ name, user_id }}
+        initialParams={{ name, user_id, token }}
         options={{ headerStyle: { height: 40 } }}
       />
     </Tab.Navigator>
   );
 }
+

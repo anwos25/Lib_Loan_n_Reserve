@@ -12,18 +12,23 @@ const ReservationStatusContent = ({ token, route }) => {
   const [error, setError] = useState(null);
   const name = route?.params?.name || "ผู้ใช้";
 
-  const fetchCurrentReservations = async () => {
+  const fetchCurrentLoans = async () => {
     try {
       setLoading(true);
-      const data = await GetCurrentReservations(token);  // ดึงข้อมูลการจอง
-      setReservations(data);
+      console.log("Fetching loans...");
+      const data = await GetLoans(token);
+      console.log("Loans data:", data);
+      setLoans(data);
       setError(null);
     } catch (err) {
+      console.error("Error fetching loans:", err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
+  
+  
 
   useFocusEffect(
     React.useCallback(() => {
@@ -120,7 +125,7 @@ const ReservationStatusScreen = ({ navigation, token, route }) => {
       case 'first':
         return <BorrowedContent token={token} />;
       case 'second':
-        return <BorrowedContent />;
+        return <ReservationHistoryContent />;
       default:
         return null;
     }

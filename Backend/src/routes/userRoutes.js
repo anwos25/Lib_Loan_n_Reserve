@@ -246,28 +246,6 @@ export const getQueue = async (req, res) => {
   }
 };
 
-export const getLoans = async (req, res) => {
-  try {
-    const userId = req.params.userId;
-    const sql = `
-      SELECT I.name, L.due_date, 
-        (JULIANDAY(L.due_date) - JULIANDAY('now')) * 24 AS hours_remaining
-      FROM Loans L
-      JOIN Items I ON L.item_id = I.id
-      WHERE L.user_id = ? AND L.status = 'borrowed'
-    `;
-
-    // ใช้ await เพื่อให้ allQuery คืนค่าผลลัพธ์โดยตรง
-    const rows = await allQuery(sql, [userId]);
-
-    res.json(rows);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error getting loans", error: error.message });
-  }
-};
-
 // ฟังก์ชันส่งการแจ้งเตือนเข้า Database
 export const sendNotification = async (req, res) => {
   try {
@@ -512,18 +490,113 @@ export const getBorrowedItems = async (req, res) => {
 
     console.log("Rows returned from database:", rows);
 
-    if (rows.length === 0) {
-      res.status(404).json({ message: "No borrowed items found" });
-    } else {
-      res.json(rows);
+    // ตรวจสอบว่า rows มีข้อมูลหรือไม่
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ message: "No borrowed items found" });
     }
+
+    res.json(rows);
   } catch (error) {
     res.status(500).json({ message: "ไม่สามารถโหลดข้อมูลกำลังยืม", error: error.message });
   }
 };
 
 
+export const getLoans = async (req, res) => {
+  const { userId } = req.params; // รับ userId จาก URL
 
+  console.log("Fetching loans for user:", userId);
 
+  try {
+    const sql = `
+      SELECT L.id AS loan_id, I.name, L.borrow_date, L.due_date, L.status
+      FROM Loans L
+      JOIN Items I ON L.item_id = I.id
+      WHERE L.user_id = ?
+    `;
+    const loans = await getQuery(sql, [userId]);
+
+    console.log("Loans found:", loans);
+
+    if (loans.length === 0) {
+      return res.status(404).json({ message: "No loans found for this user" });
+    }
+    
+    res.json(loans);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching loans", error: error.message });
+  }
+};
+
+export const addLoan = async (req, res) => {
+  try {
+    const { user_id, item_id, status, borrow_date, return_date } = req.body;
+
+    // ตรวจสอบว่าไอเท็มมีจำนวนเพียงพอหรือไม่
+    const item = await allQuery(
+      `SELECT available_quantity FROM Items WHERE id = ?`,
+      [item_id]
+    );
+
+    if (item.length === 0) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    if (item[0].available_quantity <= 0) {
+      return res.status(400).json({ message: "Item is out of stock" });
+    }
+
+    // เพิ่มข้อมูลการยืม
+    await runQuery(
+      `INSERT INTO Loans (user_id, item_id, status, borrow_date, return_date) 
+       VALUES (?, ?, ?, ?, ?)`,
+      [user_id, item_id, status, borrow_date, return_date]
+    );
+
+    // อัปเดตจำนวน available_quantity ลดลง 1
+    await runQuery(
+      `UPDATE Items SET available_quantity = available_quantity - 1 WHERE id = ?`,
+      [item_id]
+    );
+
+    res.status(201).json({ message: "Loan added successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error adding loan", error: error.message });
+  }
+};
+
+export const returnLoan = async (req, res) => {
+  try {
+    const { loan_id, item_id } = req.body;
+
+    // Check if loan exists and is borrowed
+    const loan = await allQuery(
+      `SELECT * FROM Loans WHERE id = ? AND status = 'borrowed'`,
+      [loan_id]
+    );
+
+    if (loan.length === 0) {
+      return res.status(404).json({ message: "Loan not found or already returned" });
+    }
+
+    // Update the loan status to 'returned'
+    await runQuery(
+      `UPDATE Loans SET status = 'returned' WHERE id = ?`,
+      [loan_id]
+    );
+
+    // Increase available_quantity of the item
+    await runQuery(
+      `UPDATE Items SET available_quantity = available_quantity + 1 WHERE id = ?`,
+      [item_id]
+    );
+
+    res.status(200).json({ message: "Item returned successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error returning loan", error: error.message });
+  }
+};
 
 

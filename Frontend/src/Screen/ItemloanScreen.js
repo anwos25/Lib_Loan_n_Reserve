@@ -1,22 +1,25 @@
-import axios from "axios";
-const API_URL = "http://192.168.100.2:5000"
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, ActivityIndicator, Alert, Button } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Calendar } from "react-native-calendars"; // import Calendar
+import axios from "axios";
 import BorrowEquipmentCard from "../Component/BorrowEquipmentCard";
-import { Items,  } from "../ServiceAPI/API";
+import { addLoan,Items } from "../ServiceAPI/API";
 
-
-
-const ItemloanScreen = ({ navigation, token,route }) => {
+const ItemloanScreen = ({ navigation, token, route }) => {
   const user_id = route?.params?.user_id;
-  console.log("🧪 user_id ที่รับจาก route:", user_id); 
+  console.log("🧪 user_id ที่รับจาก route:", user_id);
   const [searchText, setSearchText] = useState("");
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [borrowedItems, setBorrowedItems] = useState(new Set());
-  const name = route?.params?.name || "ผู้ใช้";
+  const [borrow_date, setBorrowDate] = useState("");
+  const [return_date, setReturnDate] = useState("");
+  const API_URL = "http://192.168.1.121:5000";
+  const [showBorrowCalendar, setShowBorrowCalendar] = useState(false);
+  const [showReturnCalendar, setShowReturnCalendar] = useState(false);
+
   useEffect(() => {
     fetchItems();
   }, []);
@@ -27,77 +30,54 @@ const ItemloanScreen = ({ navigation, token,route }) => {
       const itemsData = await Items();
       setEquipment(itemsData);
     } catch (err) {
-      setError(err.message);
+      console.log("❌ Fetch Error:", err.message);
     } finally {
       setLoading(false);
     }
   };
+  
+
+  const handleCalendarChange = (date, dateType) => {
+    if (dateType === "borrow") {
+      setBorrowDate(date);
+      setShowBorrowCalendar(false);
+    } else if (dateType === "return") {
+      setReturnDate(date);
+      setShowReturnCalendar(false);
+    }
+  };
 
   const handleBorrowRequest = async (item) => {
-    console.log("ส่งข้อมูล:", {
-      user_id,
-      item_id: item.id,
-      quantity: 1,
-      borrow_date: new Date().toISOString().split("T")[0],
-      // คำนวณ return_date เป็น 15 วันจากวันนี้
-      return_date: (() => {
-        const today = new Date();
-        const returnDate = new Date(today);
-        returnDate.setDate(today.getDate() + 15); // เพิ่ม 15 วัน
-        return returnDate.toISOString().split("T")[0]; // คืนวันที่
-      })(),
-    });
-    const isAvailable = item.available_quantity > 0;
+    if (!borrow_date || !return_date) {
+      Alert.alert(
+        "⚠️ กรุณาเลือกวันที่ยืมและวันที่คืน",)
+      console.log("⚠️ กรุณาเลือกวันที่ยืมและวันที่คืนให้ครบถ้วน");
+      return;
+    }
   
-    if (borrowedItems.has(item.id)) {
-      // ถ้ากดยืมซ้ำ → ยกเลิกการเลือก
-      const updatedSet = new Set(borrowedItems);
-      updatedSet.delete(item.id);
-      setBorrowedItems(updatedSet);
-    } else {
-      try {
-        // ✅ POST ไปยัง backend เพื่อยืม
-        await axios.post(`${API_URL}/loans`, {
-          user_id,  // 🛠 แนะนำดึงจาก token หรือ route.params
-          item_id: item.id,
-          quantity: 1,
-          borrow_date: new Date().toISOString().split("T")[0],
-          return_date: new Date(Date.now() + 15 * 86400000).toISOString().split("T")[0], // คืนใน 15 วัน
-        });
+    try {
+      const status = item.available_quantity > 0 ? "borrowed" : "reserved";
+      await addLoan(user_id, item.id, status, borrow_date, return_date, token);
   
-        // ✅ เพิ่ม item นี้เข้า set ที่แสดงว่ายืมแล้ว
-        setBorrowedItems((prev) => new Set([...prev, item.id]));
+      setBorrowedItems((prev) => new Set([...prev, item.id]));
   
-        // ✅ แสดง Alert ตามสถานะของอุปกรณ์
-        if (isAvailable) {
-          Alert.alert("ยืมสำเร็จ", `กรุณาติดต่อเจ้าหน้าที่เพื่อรับ "${item.name}"`, [
-            {
-              text: "ตกลง",
-              onPress: () => navigation.navigate("Loans"),
-            },
-          ]);
-        } else {
-          Alert.alert("จองสำเร็จ", `คุณได้จอง "${item.name}" แล้ว`, [
-            {
-              text: "ตกลง",
-              onPress: () => navigation.navigate("Loans"),
-            },
-          ]);
-        }
-      } catch (error) {
-        console.error("❌ ยืมล้มเหลว:", error);
-        Alert.alert(
-          "เกิดข้อผิดพลาด",
-          error.response?.data?.message || "ไม่สามารถยืมอุปกรณ์ได้ในขณะนี้",
-          [{ text: "ตกลง" }]
-        );
-      }
+      Alert.alert(
+        status === "borrowed" ? "ยืมสำเร็จ" : "จองสำเร็จ",
+        `คุณได้${status === "borrowed" ? "ยืม" : "จอง"} "${item.name}" แล้ว`,
+        [{ text: "ตกลง", onPress: () => navigation.navigate("Loans", { user_id, token, item_id: item.id }) }]
+      );
+    } catch (error) {
+      Alert.alert(
+        "❌ ของหมดพี่"
+      );
+      console.log("❌ ยืมล้มเหลว:", error.response?.data?.message || error.message);
     }
   };
   
   
+  
 
-  const filteredEquipment = equipment.filter(item =>
+  const filteredEquipment = equipment.filter((item) =>
     item.name.toLowerCase().startsWith(searchText.toLowerCase())
   );
 
@@ -131,7 +111,7 @@ const ItemloanScreen = ({ navigation, token,route }) => {
               style={styles.icon}
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate("Profile",{ name : name })}>
+          <TouchableOpacity onPress={() => navigation.navigate("Profile", { name: "ผู้ใช้" })}>
             <Ionicons
               name="person-circle-outline"
               size={28}
@@ -159,20 +139,37 @@ const ItemloanScreen = ({ navigation, token,route }) => {
         <FlatList
           data={filteredEquipment}
           renderItem={({ item }) => (
-            <BorrowEquipmentCard 
+            <BorrowEquipmentCard
               equipmentData={item}
               isBorrowed={borrowedItems.has(item.id)}
               onBorrowPress={() => handleBorrowRequest(item)}
             />
           )}
           keyExtractor={(item) => item.id}
-          ListEmptyComponent={() => (
-            <Text style={styles.emptyText}>ไม่พบอุปกรณ์</Text>
-          )}
+          ListEmptyComponent={() => <Text style={styles.emptyText}>ไม่พบอุปกรณ์</Text>}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
         />
       </View>
+
+      {/* Calendar */}
+      <Button title="Select Borrow Date" onPress={() => setShowBorrowCalendar(true)} />
+      {showBorrowCalendar && (
+        <Calendar
+          onDayPress={(day) => handleCalendarChange(day.dateString, "borrow")}
+          markedDates={{ [borrow_date]: { selected: true, selectedColor: "blue" } }}
+        />
+      )}
+      <Text>Borrow Date: {borrow_date}</Text>
+
+      <Button title="Select Return Date" onPress={() => setShowReturnCalendar(true)} />
+      {showReturnCalendar && (
+        <Calendar
+          onDayPress={(day) => handleCalendarChange(day.dateString, "return")}
+          markedDates={{ [return_date]: { selected: true, selectedColor: "blue" } }}
+        />
+      )}
+      <Text>Return Date: {return_date}</Text>
     </View>
   );
 };
@@ -187,12 +184,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     padding: 20,
-    backgroundColor: "#122620", // Matching LibraryScreen header style
+    backgroundColor: "#122620",
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "white", // Matching LibraryScreen header title style
+    color: "white",
   },
   headerIcons: {
     flexDirection: "row",
@@ -227,25 +224,25 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
   errorText: {
-    color: 'red',
+    color: "red",
     fontSize: 16,
   },
   emptyText: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 20,
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
 });
 
