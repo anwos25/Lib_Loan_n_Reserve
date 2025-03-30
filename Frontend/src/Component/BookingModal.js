@@ -20,14 +20,41 @@ const generateTimeSlots = () => {
 
 const timeOptions = generateTimeSlots();
 
-const BookingModal = ({ isVisible, onClose, onSave }) => {
+const BookingModal = ({ isVisible, onClose, onSave, user_id, room, selectedDate, token }) => {
   const [startTimeIndex, setStartTimeIndex] = useState(0);
-  const [endTimeIndex, setEndTimeIndex] = useState(1);
+const [endTimeIndex, setEndTimeIndex] = useState(1);
 
-  const handleSave = () => {
-    onSave(timeOptions[startTimeIndex], timeOptions[endTimeIndex]);
+
+const handleSave = async () => {
+  const startTime = timeOptions[startTimeIndex];
+  const endTime = timeOptions[endTimeIndex];
+  
+  console.log("Booking Details:", {
+    user_id,
+    room_id: room.room_id,
+    selectedDate,
+    startTime,
+    endTime,
+  });
+  
+  try {
+    const bookingDate = selectedDate;
+    const response = await addReserve(user_id, room.room_id, bookingDate, startTime, endTime, token);
+    
+    // ส่งข้อมูลที่บันทึกกลับไปยังหน้า BookingScreen
+    onSave({
+      user_id,
+      room_id: room.room_id,
+      selectedDate,
+      startTime,
+      endTime,
+    }, response);
     onClose();
-  };
+  } catch (error) {
+    console.error("Error while making reservation:", error.message);
+  }
+};
+
 
   return (
     <Modal
@@ -40,11 +67,14 @@ const BookingModal = ({ isVisible, onClose, onSave }) => {
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>เลือกเวลา</Text>
 
-          {/* เลือกเวลาเริ่ม */}
+          {/* Select Start Time */}
           <Text style={styles.label}>เวลาเริ่ม:</Text>
           <Picker
             selectedValue={startTimeIndex}
-            onValueChange={(itemValue) => setStartTimeIndex(itemValue)}
+            onValueChange={(itemValue) => {
+              setStartTimeIndex(itemValue);
+              console.log("Selected Start Time:", timeOptions[itemValue]);
+            }}
             style={styles.picker}
           >
             {timeOptions.map((time, index) => (
@@ -52,11 +82,14 @@ const BookingModal = ({ isVisible, onClose, onSave }) => {
             ))}
           </Picker>
 
-          {/* เลือกเวลาจบ */}
-          <Text style={styles.label}>เวลาจบ:</Text>
+          {/* Select End Time */}
+          <Text style={styles.label}>เวลาเสร็จ:</Text>
           <Picker
             selectedValue={endTimeIndex}
-            onValueChange={(itemValue) => setEndTimeIndex(itemValue)}
+            onValueChange={(itemValue) => {
+              setEndTimeIndex(itemValue);
+              console.log("Selected End Time:", timeOptions[itemValue]);
+            }}
             style={styles.picker}
           >
             {timeOptions.slice(startTimeIndex + 1).map((time, index) => (
@@ -64,7 +97,7 @@ const BookingModal = ({ isVisible, onClose, onSave }) => {
             ))}
           </Picker>
 
-          {/* ปุ่มบันทึกและปิด */}
+          {/* Save and Close Buttons */}
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
             <Text style={styles.saveButtonText}>บันทึกการจอง</Text>
           </TouchableOpacity>

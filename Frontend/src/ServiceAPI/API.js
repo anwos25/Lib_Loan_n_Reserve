@@ -146,3 +146,51 @@ export const returnLoan = async (loan_id, item_id, token) => {
     throw new Error(error.response?.data?.message || "Error returning loan");
   }
 };
+export const addReserve = async (user_id, room_id, bookingDate, startTime, endTime, token) => {
+  try {
+    const response = await fetch("API_URL", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        user_id,
+        room_id,
+        booking_date: bookingDate,
+        start_time: startTime,
+        end_time: endTime,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to make reservation');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error while making reservation:", error.message);
+    throw error; // Rethrow to be caught in the calling function
+  }
+};
+
+export const GetCurrentReservedRooms = async (token, user_id) => {
+  try {
+    const response = await fetch(`http://192.168.1.121:5000/reserves/current/${user_id}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      return data; // Return the response data
+    } else {
+      throw new Error(data.message || 'Something went wrong');
+    }
+  } catch (error) {
+    console.error('Error fetching reserved room data:', error);
+    throw error;
+  }
+};

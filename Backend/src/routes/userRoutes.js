@@ -600,3 +600,57 @@ export const returnLoan = async (req, res) => {
 };
 
 
+export const addReserve = async (req, res) => {
+  try {
+    const { user_id, room_id, booking_date, start_time, end_time } = req.body;
+
+    // ตรวจสอบว่าห้องว่างหรือไม่
+    const existingBooking = await allQuery(
+      `SELECT * FROM RoomBookings 
+       WHERE room_id = ? AND booking_date = ? 
+       AND ((start_time <= ? AND end_time > ?) OR (start_time < ? AND end_time >= ?))`,
+      [room_id, booking_date, start_time, start_time, end_time, end_time]
+    );
+
+    if (existingBooking.length > 0) {
+      return res.status(400).json({ message: "Room is already booked for the selected time." });
+    }
+
+    // เพิ่มข้อมูลการจองห้อง
+    await runQuery(
+      `INSERT INTO RoomBookings (room_id, user_id, booking_date, start_time, end_time) 
+       VALUES (?, ?, ?, ?, ?)`,
+      [room_id, user_id, booking_date, start_time, end_time]
+    );
+
+    res.status(201).json({ message: "Room booked successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error booking room", error: error.message });
+  }
+};
+export const getReservedRoom = async (req, res) => {
+  const { user_id } = req.params;
+
+  console.log("Received user_id:", user_id); // เพิ่ม log เพื่อตรวจสอบค่า user_id
+
+  try {
+    const sql = `
+      SELECT RB.booking_id, R.room_name, RB.booking_date, RB.start_time, RB.end_time, RB.status
+      FROM RoomBookings RB
+      JOIN Rooms R ON RB.room_id = R.room_id
+      WHERE RB.user_id = ? AND RB.status = 'Booked'
+    `;
+    const rows = await getQuery(sql, [user_id]);
+
+    console.log("Rows returned from database:", rows);
+
+    // ตรวจสอบว่า rows มีข้อมูลหรือไม่
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ message: "No reserved rooms found" });
+    }
+
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ message: "ไม่สามารถโหลดข้อมูลการจองห้อง", error: error.message });
+  }
+};

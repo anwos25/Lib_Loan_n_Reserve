@@ -13,6 +13,7 @@ import { Rooms } from "../ServiceAPI/API";
 import RoomCard from "../Component/RoomCard";
 import BookingModal from "../Component/BookingModal";
 import { Calendar } from "react-native-calendars";
+import { addReserve } from "../ServiceAPI/API"; // นำเข้า addReserve API
 
 const BookingScreen = ({ navigation, route }) => {
   const name = route?.params?.name || "ผู้ใช้"; // รับค่าชื่อจาก route.params ถ้ามี
@@ -59,12 +60,35 @@ const BookingScreen = ({ navigation, route }) => {
     setIsModalVisible(false);
   };
 
-  const handleSaveBooking = (startDate, endDate) => {
-    console.log("จองห้อง:", selectedRoom);
-    console.log("วันที่เลือก:", selectedDate); // Display selected date
-    console.log("เริ่มที่:", startDate);
-    console.log("จบที่:", endDate);
+  const handleSaveBooking = async (bookingDetails, response) => {
+    console.log("Booking details received in BookingScreen:", bookingDetails);
+    const startTime = timeOptions[startTimeIndex];
+    const endTime = timeOptions[endTimeIndex];
+    
+    console.log("Booking details:", {
+      user_id,
+      room_id: selectedRoom.room_id,
+      selectedDate,
+      startTime,
+      endTime,
+    });
+    
+    try {
+      const bookingDate = selectedDate;
+      const response = await addReserve(user_id, selectedRoom.room_id, bookingDate, startTime, endTime, token);
+      console.log("Booking response:", response);
+      onSave(response); // Callback to save the booking
+      closeModal(); // Close modal on success
+    } catch (error) {
+      console.error("Error while making reservation:", error.message);
+      if (error.response) {
+        console.error("Error response data:", error.response.data);
+      }
+    }
   };
+  
+  
+  
 
   return (
     <View style={styles.container}>
@@ -95,15 +119,19 @@ const BookingScreen = ({ navigation, route }) => {
       <View style={styles.calendarContainer}>
         <Text style={styles.calendarTitle}>เลือกวันที่:</Text>
         <Calendar
-          onDayPress={(day) => setSelectedDate(day.dateString)} // Save the selected date
-          markedDates={{
-            [selectedDate]: {
-              selected: true,
-              selectedColor: "#B68D40",
-              selectedTextColor: "white",
-            },
-          }}
-        />
+         onDayPress={(day) => {
+            setSelectedDate(day.dateString);
+          console.log("Selected Date:", day.dateString);  // Log the selected date
+               }}
+             markedDates={{
+             [selectedDate]: {
+             selected: true,
+               selectedColor: "#B68D40",
+                 selectedTextColor: "white",
+               },
+              }}
+            />
+
       </View>
 
       {selectedDate ? (

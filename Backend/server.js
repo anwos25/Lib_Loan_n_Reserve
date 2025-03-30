@@ -23,6 +23,8 @@ import {
   loanItems,
   getBorrowedItems,
   addLoan,
+  addReserve,
+  getReservedRoom
 } from "./src/routes/userRoutes.js";
 import { returnLoan } from "./src/routes/userRoutes.js";
 
@@ -149,3 +151,10 @@ app.post(
   validateFields(["loan_id", "item_id"]),
   returnLoan
 );
+
+app.post(
+  "/add-reserve",
+  validateFields(["user_id", "room_id", "booking_date", "start_time", "end_time"]),
+  addReserve
+);
+app.get("/reserves/current/:user_id", getReservedRoom);
