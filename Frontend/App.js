@@ -53,6 +53,15 @@ export default function App() {
             },
           }}
         />
+        <Stack.Screen
+          name="Loans"
+          component={LoanStatusScreen}
+          options={{
+            headerStyle: {
+              height: 40,
+            },
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -78,8 +87,6 @@ function MainTabNavigator({ route }) {
             iconName = focused ? "calendar" : "calendar-outline";
           } else if (route.name === "Items") {
             iconName = focused ? "albums" : "albums-outline";
-          } else if (route.name === "Loans") {
-            iconName = focused ? "book" : "book-outline";
           } else if (route.name === "ReservationStatus") {
             iconName = focused ? "checkmark" : "checkmark-outline";
           }
@@ -107,12 +114,12 @@ function MainTabNavigator({ route }) {
         initialParams={{ name, user_id, token }}
         options={{ headerStyle: { height: 40 } }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Loans"
         component={LoanStatusScreen}
         initialParams={{ name, user_id, token }}
         options={{ headerStyle: { height: 40 } }}
-      />
+      /> */}
       <Tab.Screen
         name="ReservationStatus"
         component={ReservationStatusScreen}

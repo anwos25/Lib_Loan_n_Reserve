@@ -1,24 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, ActivityIndicator, Alert, Button } from "react-native";
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars"; // import Calendar
 import axios from "axios";
 import BorrowEquipmentCard from "../Component/BorrowEquipmentCard";
-import { addLoan,Items } from "../ServiceAPI/API";
+import { addLoan, Items } from "../ServiceAPI/API";
 
 const ItemloanScreen = ({ navigation, token, route }) => {
   const user_id = route?.params?.user_id;
   console.log("🧪 user_id ที่รับจาก route:", user_id);
+  
   const [searchText, setSearchText] = useState("");
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [borrowedItems, setBorrowedItems] = useState(new Set());
-  const [borrow_date, setBorrowDate] = useState("");
-  const [return_date, setReturnDate] = useState("");
+  const [borrowDate, setBorrowDate] = useState("");
+  const [returnDate, setReturnDate] = useState("");
+  const [showCalendar, setShowCalendar] = useState(null); // Only one state to manage calendar visibility
+  
   const API_URL = "http://192.168.1.121:5000";
-  const [showBorrowCalendar, setShowBorrowCalendar] = useState(false);
-  const [showReturnCalendar, setShowReturnCalendar] = useState(false);
 
   useEffect(() => {
     fetchItems();
@@ -27,37 +28,34 @@ const ItemloanScreen = ({ navigation, token, route }) => {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      const itemsData = await Items();
-      setEquipment(itemsData);
+      const itemsData = await Items(); // Assuming this fetches your items from API
+      setEquipment(itemsData); // Update the state with new data
     } catch (err) {
-      console.log("❌ Fetch Error:", err.message);
+      console.log("Error fetching data: ", err.message);
     } finally {
       setLoading(false);
     }
   };
-  
 
-  const handleCalendarChange = (date, dateType) => {
-    if (dateType === "borrow") {
+  const handleCalendarChange = (date) => {
+    if (showCalendar === "borrow") {
       setBorrowDate(date);
-      setShowBorrowCalendar(false);
-    } else if (dateType === "return") {
+    } else if (showCalendar === "return") {
       setReturnDate(date);
-      setShowReturnCalendar(false);
     }
+    setShowCalendar(null); // Close the calendar after selection
   };
 
   const handleBorrowRequest = async (item) => {
-    if (!borrow_date || !return_date) {
-      Alert.alert(
-        "⚠️ กรุณาเลือกวันที่ยืมและวันที่คืน",)
+    if (!borrowDate || !returnDate) {
+      Alert.alert("⚠️ กรุณาเลือกวันที่ยืมและวันที่คืน");
       console.log("⚠️ กรุณาเลือกวันที่ยืมและวันที่คืนให้ครบถ้วน");
       return;
     }
   
     try {
       const status = item.available_quantity > 0 ? "borrowed" : "reserved";
-      await addLoan(user_id, item.id, status, borrow_date, return_date, token);
+      await addLoan(user_id, item.id, status, borrowDate, returnDate, token);
   
       setBorrowedItems((prev) => new Set([...prev, item.id]));
   
@@ -67,15 +65,10 @@ const ItemloanScreen = ({ navigation, token, route }) => {
         [{ text: "ตกลง", onPress: () => navigation.navigate("Loans", { user_id, token, item_id: item.id }) }]
       );
     } catch (error) {
-      Alert.alert(
-        "❌ ของหมดพี่"
-      );
+      Alert.alert("❌ ของหมดพี่");
       console.log("❌ ยืมล้มเหลว:", error.response?.data?.message || error.message);
     }
   };
-  
-  
-  
 
   const filteredEquipment = equipment.filter((item) =>
     item.name.toLowerCase().startsWith(searchText.toLowerCase())
@@ -145,7 +138,7 @@ const ItemloanScreen = ({ navigation, token, route }) => {
               onBorrowPress={() => handleBorrowRequest(item)}
             />
           )}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id.toString()}
           ListEmptyComponent={() => <Text style={styles.emptyText}>ไม่พบอุปกรณ์</Text>}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
@@ -153,23 +146,27 @@ const ItemloanScreen = ({ navigation, token, route }) => {
       </View>
 
       {/* Calendar */}
-      <Button title="Select Borrow Date" onPress={() => setShowBorrowCalendar(true)} />
-      {showBorrowCalendar && (
+      <TouchableOpacity style={styles.calendarButton} onPress={() => setShowCalendar("borrow")}>
+        <Text style={styles.calendarButtonText}>Select Borrow Date</Text>
+      </TouchableOpacity>
+      {showCalendar === "borrow" && (
         <Calendar
-          onDayPress={(day) => handleCalendarChange(day.dateString, "borrow")}
-          markedDates={{ [borrow_date]: { selected: true, selectedColor: "blue" } }}
+          onDayPress={(day) => handleCalendarChange(day.dateString)}
+          markedDates={{ [borrowDate]: { selected: true, selectedColor: "blue" } }}
         />
       )}
-      <Text>Borrow Date: {borrow_date}</Text>
+      <Text>Borrow Date: {borrowDate}</Text>
 
-      <Button title="Select Return Date" onPress={() => setShowReturnCalendar(true)} />
-      {showReturnCalendar && (
+      <TouchableOpacity style={styles.calendarButton} onPress={() => setShowCalendar("return")}>
+        <Text style={styles.calendarButtonText}>Select Return Date</Text>
+      </TouchableOpacity>
+      {showCalendar === "return" && (
         <Calendar
-          onDayPress={(day) => handleCalendarChange(day.dateString, "return")}
-          markedDates={{ [return_date]: { selected: true, selectedColor: "blue" } }}
+          onDayPress={(day) => handleCalendarChange(day.dateString)}
+          markedDates={{ [returnDate]: { selected: true, selectedColor: "blue" } }}
         />
       )}
-      <Text>Return Date: {return_date}</Text>
+      <Text>Return Date: {returnDate}</Text>
     </View>
   );
 };
@@ -243,6 +240,18 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 16,
     color: "#666",
+  },
+  calendarButton: {
+    backgroundColor: "#122620",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginTop: 12,
+    alignItems: "center",
+  },
+  calendarButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

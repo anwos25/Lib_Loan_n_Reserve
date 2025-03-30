@@ -213,14 +213,14 @@ export const bookRoom = async (req, res) => {
 export const getItems = async (req, res) => {
   try {
     const sql = "SELECT id, name, available_quantity FROM Items";
-    const items = await allQuery(sql, []); // allQuery ควรเป็นฟังก์ชันที่คืนค่า Promise
+    const items = await allQuery(sql, []); // ตรวจสอบให้แน่ใจว่า allQuery ส่งคืนข้อมูลที่ถูกต้อง
+    console.log("Fetched items:", items); // เช็คข้อมูลที่ส่งกลับ
     res.json(items);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error getting items", error: error.message });
+    res.status(500).json({ message: "Error getting items", error: error.message });
   }
 };
+
 
 export const getQueue = async (req, res) => {
   try {
@@ -628,6 +628,7 @@ export const addReserve = async (req, res) => {
     res.status(500).json({ message: "Error booking room", error: error.message });
   }
 };
+
 export const getReservedRoom = async (req, res) => {
   const { user_id } = req.params;
 

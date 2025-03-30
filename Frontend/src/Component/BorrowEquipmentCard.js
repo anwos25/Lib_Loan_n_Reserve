@@ -1,4 +1,4 @@
-import React from "react";
+import React,{useEffect} from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import moment from "moment"; // ใช้ moment.js เพื่อจัดการวันที่
 
@@ -12,8 +12,8 @@ const BorrowEquipmentCard = ({ equipmentData, onBorrowPress }) => {
         <View style={styles.infoItem}>
           <Text style={styles.infoLabel}>พร้อมให้ยืม:</Text>
           <Text style={styles.infoValue}>
-            {equipmentData.available} / {equipmentData.total_quantity}
-          </Text>
+              {equipmentData.available_quantity}
+</Text>
         </View>
         <View style={styles.infoItem}>
           <Text style={styles.infoLabel}>วันที่เพิ่ม:</Text>
@@ -30,6 +30,13 @@ const BorrowEquipmentCard = ({ equipmentData, onBorrowPress }) => {
   );
 };
 
+useEffect(() => {
+  const unsubscribe = navigation.addListener('focus', () => {
+    fetchItems(); // เรียก fetchItems ทุกครั้งที่หน้าได้รับ focus
+  });
+
+  return unsubscribe; // กำหนดฟังก์ชันที่ยกเลิก listener เมื่อ component จะ unmount
+}, [navigation]); // ใช้ navigation ใน dependencies array
 
 const styles = StyleSheet.create({
   card: {
