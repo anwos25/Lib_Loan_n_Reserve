@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { GetCurrentLoans, GetCurrentReservedRooms } from "../ServiceAPI/API";
 
 const LibraryScreen = ({ route }) => {
@@ -15,30 +15,38 @@ const LibraryScreen = ({ route }) => {
   const [upcomingReservations, setUpcomingReservations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user_id) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const loanData = await GetCurrentLoans(token, user_id);
-        setLoans(loanData);
-        const reservationData = await GetCurrentReservedRooms(token, user_id);
-        setReservations(reservationData);
-
-        // Filter upcoming reservations
-        const now = new Date();
-        const upcoming = reservationData.filter(item => new Date(item.booking_date) >= now);
-        setUpcomingReservations(upcoming);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [user_id, token]);
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchData = async () => {
+        setLoading(true);
+        try {
+          // ดึงข้อมูลยืมอุปกรณ์แบบไม่ให้ crash ถ้าไม่มีของ
+          try {
+            const loanData = await GetCurrentLoans(token, user_id);
+            setLoans(loanData);
+          } catch (loanError) {
+            console.warn("ไม่มีอุปกรณ์ที่ยืม:", loanError.message);
+            setLoans([]); // เคลียร์ข้อมูลแทนการปล่อยให้ error
+          }
+  
+          // ดึงข้อมูลการจองห้องตามปกติ
+          const reservationData = await GetCurrentReservedRooms(token, user_id);
+          setReservations(reservationData);
+  
+          const now = new Date();
+          const upcoming = reservationData.filter(item => new Date(item.booking_date) >= now);
+          setUpcomingReservations(upcoming);
+        } catch (error) {
+          console.error("❌ Error fetching data:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchData();
+    }, [user_id, token])
+  );
+  
 
   return (
     <ScrollView style={styles.container}>
@@ -54,7 +62,6 @@ const LibraryScreen = ({ route }) => {
         </View>
       </View>
 
-      {/* Greeting and Upcoming Reservations Section */}
       <View style={styles.greeting}>
         <Text style={styles.greetingText}>สวัสดี, {name} 👋</Text>
         <Text style={styles.greetingSubText}>
@@ -73,7 +80,7 @@ const LibraryScreen = ({ route }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Reservations Section */}
+      {/* Reservations */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>🏨 ห้องที่จอง</Text>
@@ -95,7 +102,7 @@ const LibraryScreen = ({ route }) => {
         )}
       </View>
 
-      {/* Loans Section */}
+      {/* Loans */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>📦 อุปกรณ์ที่กำลังยืม</Text>

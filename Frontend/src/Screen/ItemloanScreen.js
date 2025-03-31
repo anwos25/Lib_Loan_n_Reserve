@@ -17,7 +17,7 @@ const ItemloanScreen = ({ navigation, token, route }) => {
   const [borrowedItems, setBorrowedItems] = useState(new Set());
   const [borrow_date, setBorrowDate] = useState("");
   const [return_date, setReturnDate] = useState("");
-  const API_URL = "http://192.168.1.121:5000";
+  const API_URL = "http://192.168.133.1:5000";
   const [showBorrowCalendar, setShowBorrowCalendar] = useState(false);
   const [showReturnCalendar, setShowReturnCalendar] = useState(false);
 

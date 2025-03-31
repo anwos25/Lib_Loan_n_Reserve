@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://192.168.1.121:5000";
+const API_URL = "http://192.168.133.1:5000";
 
 // Updated RegisterUser function to accept name, username, phone, and password
 export const RegisterUser = async (name, username, phone, password) => {
@@ -37,7 +37,7 @@ export const LoginUser = async (username, password) => {
 // Modify the API call to accept user_id and pass it to the backend API
 export const GetCurrentLoans = async (token, user_id) => {
   try {
-    const response = await fetch(`http://192.168.1.121:5000/loans/borrowed/${user_id}`, {
+    const response = await fetch(`http://192.168.133.1:5000/loans/borrowed/${user_id}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -174,7 +174,7 @@ export const addReserve = async (user_id, room_id, bookingDate, startTime, endTi
 
 export const GetCurrentReservedRooms = async (token, user_id) => {
   try {
-    const response = await fetch(`http://192.168.1.121:5000/reserves/current/${user_id}`, {
+    const response = await fetch(`http://192.168.133.1:5000/reserves/current/${user_id}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,

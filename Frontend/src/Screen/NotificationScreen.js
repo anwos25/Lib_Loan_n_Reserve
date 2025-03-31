@@ -6,7 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { Swipeable } from "react-native-gesture-handler";
 
-const API_URL = "http://192.168.1.121:5000";
+const API_URL = "http://192.168.133.1:5000";
 
 const NotificationScreen = () => {
   const navigation = useNavigation();
