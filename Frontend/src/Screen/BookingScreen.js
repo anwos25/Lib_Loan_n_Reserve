@@ -86,18 +86,6 @@ const BookingScreen = ({ navigation, route }) => {
         </View>
       </View>
 
-      <View style={styles.filterBar}>
-        <TouchableOpacity style={styles.filterButton}>
-          <Text style={styles.filterButtonText}>ทั้งหมด</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterButton}>
-          <Text style={styles.filterButtonText}>ห้องเดี่ยว</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterButton}>
-          <Text style={styles.filterButtonText}>ห้องกลุ่ม</Text>
-        </TouchableOpacity>
-      </View>
-
       <View style={styles.calendarContainer}>
         <Text style={styles.calendarTitle}>เลือกวันที่:</Text>
         <Calendar
