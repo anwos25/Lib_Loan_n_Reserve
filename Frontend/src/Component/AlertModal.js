@@ -1,6 +1,8 @@
 import React from "react";
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Platform } from 'react-native';
+
 
 const AlertModal = ({ isVisible, message, type, onClose }) => {
   return (

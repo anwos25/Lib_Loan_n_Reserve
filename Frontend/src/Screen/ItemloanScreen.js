@@ -9,17 +9,16 @@ import { addLoan, Items } from "../ServiceAPI/API";
 const ItemloanScreen = ({ navigation, token, route }) => {
   const user_id = route?.params?.user_id;
   console.log("🧪 user_id ที่รับจาก route:", user_id);
-  
   const [searchText, setSearchText] = useState("");
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [borrowedItems, setBorrowedItems] = useState(new Set());
-  const [borrowDate, setBorrowDate] = useState("");
-  const [returnDate, setReturnDate] = useState("");
-  const [showCalendar, setShowCalendar] = useState(null); // Only one state to manage calendar visibility
-  
+  const [borrow_date, setBorrowDate] = useState("");
+  const [return_date, setReturnDate] = useState("");
   const API_URL = "http://192.168.1.121:5000";
+  const [showBorrowCalendar, setShowBorrowCalendar] = useState(false);
+  const [showReturnCalendar, setShowReturnCalendar] = useState(false);
 
   useEffect(() => {
     fetchItems();
@@ -28,44 +27,49 @@ const ItemloanScreen = ({ navigation, token, route }) => {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      const itemsData = await Items(); // Assuming this fetches your items from API
-      setEquipment(itemsData); // Update the state with new data
+      const itemsData = await Items();
+      setEquipment(itemsData);
     } catch (err) {
-      console.log("Error fetching data: ", err.message);
+      console.log("❌ Fetch Error:", err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCalendarChange = (date) => {
-    if (showCalendar === "borrow") {
+  const handleCalendarChange = (date, dateType) => {
+    if (dateType === "borrow") {
       setBorrowDate(date);
-    } else if (showCalendar === "return") {
+      setShowBorrowCalendar(false);
+    } else if (dateType === "return") {
       setReturnDate(date);
+      setShowReturnCalendar(false);
     }
-    setShowCalendar(null); // Close the calendar after selection
   };
 
   const handleBorrowRequest = async (item) => {
-    if (!borrowDate || !returnDate) {
-      Alert.alert("⚠️ กรุณาเลือกวันที่ยืมและวันที่คืน");
+    if (!borrow_date || !return_date) {
+      Alert.alert(
+        "⚠️ กรุณาเลือกวันที่ยืมและวันที่คืน"
+      );
       console.log("⚠️ กรุณาเลือกวันที่ยืมและวันที่คืนให้ครบถ้วน");
       return;
     }
-  
+
     try {
       const status = item.available_quantity > 0 ? "borrowed" : "reserved";
-      await addLoan(user_id, item.id, status, borrowDate, returnDate, token);
-  
+      await addLoan(user_id, item.id, status, borrow_date, return_date, token);
+
       setBorrowedItems((prev) => new Set([...prev, item.id]));
-  
+
       Alert.alert(
         status === "borrowed" ? "ยืมสำเร็จ" : "จองสำเร็จ",
         `คุณได้${status === "borrowed" ? "ยืม" : "จอง"} "${item.name}" แล้ว`,
         [{ text: "ตกลง", onPress: () => navigation.navigate("Loans", { user_id, token, item_id: item.id }) }]
       );
     } catch (error) {
-      Alert.alert("❌ ของหมดพี่");
+      Alert.alert(
+        "❌ ของหมดพี่"
+      );
       console.log("❌ ยืมล้มเหลว:", error.response?.data?.message || error.message);
     }
   };
@@ -138,7 +142,7 @@ const ItemloanScreen = ({ navigation, token, route }) => {
               onBorrowPress={() => handleBorrowRequest(item)}
             />
           )}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.id}
           ListEmptyComponent={() => <Text style={styles.emptyText}>ไม่พบอุปกรณ์</Text>}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
@@ -146,27 +150,27 @@ const ItemloanScreen = ({ navigation, token, route }) => {
       </View>
 
       {/* Calendar */}
-      <TouchableOpacity style={styles.calendarButton} onPress={() => setShowCalendar("borrow")}>
-        <Text style={styles.calendarButtonText}>Select Borrow Date</Text>
+      <TouchableOpacity style={styles.calendarButton} onPress={() => setShowBorrowCalendar(true)}>
+        <Text style={styles.buttonText}>Select Borrow Date</Text>
       </TouchableOpacity>
-      {showCalendar === "borrow" && (
+      {showBorrowCalendar && (
         <Calendar
-          onDayPress={(day) => handleCalendarChange(day.dateString)}
-          markedDates={{ [borrowDate]: { selected: true, selectedColor: "blue" } }}
+          onDayPress={(day) => handleCalendarChange(day.dateString, "borrow")}
+          markedDates={{ [borrow_date]: { selected: true, selectedColor: "#B68D40" } }}
         />
       )}
-      <Text>Borrow Date: {borrowDate}</Text>
+      <Text>Borrow Date: {borrow_date}</Text>
 
-      <TouchableOpacity style={styles.calendarButton} onPress={() => setShowCalendar("return")}>
-        <Text style={styles.calendarButtonText}>Select Return Date</Text>
+      <TouchableOpacity style={styles.calendarButton} onPress={() => setShowReturnCalendar(true)}>
+        <Text style={styles.buttonText}>Select Return Date</Text>
       </TouchableOpacity>
-      {showCalendar === "return" && (
+      {showReturnCalendar && (
         <Calendar
-          onDayPress={(day) => handleCalendarChange(day.dateString)}
-          markedDates={{ [returnDate]: { selected: true, selectedColor: "blue" } }}
+          onDayPress={(day) => handleCalendarChange(day.dateString, "return")}
+          markedDates={{ [return_date]: { selected: true, selectedColor: "#B68D40" } }}
         />
       )}
-      <Text>Return Date: {returnDate}</Text>
+      <Text>Return Date: {return_date}</Text>
     </View>
   );
 };
@@ -244,11 +248,11 @@ const styles = StyleSheet.create({
   calendarButton: {
     backgroundColor: "#122620",
     paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginTop: 12,
+    marginVertical: 10,
     alignItems: "center",
+    justifyContent: "center",
   },
-  calendarButtonText: {
+  buttonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
