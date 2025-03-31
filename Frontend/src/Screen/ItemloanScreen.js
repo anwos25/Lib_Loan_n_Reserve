@@ -8,6 +8,7 @@ import { addLoan, Items } from "../ServiceAPI/API";
 
 const ItemloanScreen = ({ navigation, token, route }) => {
   const user_id = route?.params?.user_id;
+  const name = route?.params?.name;
   console.log("🧪 user_id ที่รับจาก route:", user_id);
   const [searchText, setSearchText] = useState("");
   const [equipment, setEquipment] = useState([]);
@@ -108,7 +109,7 @@ const ItemloanScreen = ({ navigation, token, route }) => {
               style={styles.icon}
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate("Profile", { name: "ผู้ใช้" })}>
+          <TouchableOpacity onPress={() => navigation.navigate("Profile", { name: name })}>
             <Ionicons
               name="person-circle-outline"
               size={28}

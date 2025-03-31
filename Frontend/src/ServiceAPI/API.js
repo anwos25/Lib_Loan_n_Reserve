@@ -148,7 +148,7 @@ export const returnLoan = async (loan_id, item_id, token) => {
 };
 export const addReserve = async (user_id, room_id, bookingDate, startTime, endTime, token) => {
   try {
-    const response = await fetch("API_URL", {
+    const response = await fetch(`${API_URL}/add-reserve`, {  //แก้้ตรง API_URL เป็น API_URL ให้แล้ว
       method: "POST",
       headers: {
         "Content-Type": "application/json",

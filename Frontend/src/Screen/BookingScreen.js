@@ -52,6 +52,7 @@ const BookingScreen = ({ navigation, route }) => {
   );
 
   const openModal = (room) => {
+    console.log("🖱️ กดปุ่มจอง ห้อง:", room);
     setSelectedRoom(room);
     setIsModalVisible(true);
   };
@@ -60,31 +61,12 @@ const BookingScreen = ({ navigation, route }) => {
     setIsModalVisible(false);
   };
 
-  const handleSaveBooking = async (bookingDetails, response) => {
-    console.log("Booking details received in BookingScreen:", bookingDetails);
-    const startTime = timeOptions[startTimeIndex];
-    const endTime = timeOptions[endTimeIndex];
-    
-    console.log("Booking details:", {
-      user_id,
-      room_id: selectedRoom.room_id,
-      selectedDate,
-      startTime,
-      endTime,
-    });
-    
-    try {
-      const bookingDate = selectedDate;
-      const response = await addReserve(user_id, selectedRoom.room_id, bookingDate, startTime, endTime, token);
-      console.log("Booking response:", response);
-      onSave(response); // Callback to save the booking
-      closeModal(); // Close modal on success
-    } catch (error) {
-      console.error("Error while making reservation:", error.message);
-      if (error.response) {
-        console.error("Error response data:", error.response.data);
-      }
-    }
+
+  
+  const handleSaveBooking = (bookingDetails, response) => {
+    console.log("📦 Booking received in BookingScreen:", bookingDetails);
+    console.log("✅ API response:", response);
+    closeModal();
   };
   
   
@@ -134,7 +116,7 @@ const BookingScreen = ({ navigation, route }) => {
 
       </View>
 
-      {selectedDate ? (
+      {/* {selectedDate ? (
         <View style={styles.roomsList}>
           <Text style={styles.roomsListTitle}>
             ห้องที่ว่างสำหรับวันที่ {selectedDate} ({rooms.length})
@@ -153,13 +135,40 @@ const BookingScreen = ({ navigation, route }) => {
         </View>
       ) : (
         <Text style={styles.roomsListTitle}>กรุณาเลือกวันที่ก่อน</Text>
-      )}
+      )} */}
+      {selectedDate ? (
+  <View style={{ flex: 1 }}>
+    <Text style={styles.roomsListTitle}>
+      ห้องที่ว่างสำหรับวันที่ {selectedDate} ({rooms.length})
+    </Text>
+    {loading ? (
+      <ActivityIndicator size="large" color="#007AFF" />
+    ) : rooms.length > 0 ? (
+      <FlatList
+        data={rooms}
+        renderItem={renderRoomItem}
+        keyExtractor={(item, index) => (item.id ? item.id.toString() : index.toString())}
+        contentContainerStyle={{ padding: 16 }}
+      />
+    ) : (
+      <Text>ไม่พบห้องที่ว่างในวันที่เลือก</Text>
+    )}
+  </View>
+) : (
+  <Text style={styles.roomsListTitle}>กรุณาเลือกวันที่ก่อน</Text>
+)}
+
 
       <BookingModal
-        isVisible={isModalVisible}
-        onClose={closeModal}
-        onSave={handleSaveBooking}
-      />
+  isVisible={isModalVisible}
+  onClose={closeModal}
+  onSave={handleSaveBooking}
+  user_id={route?.params?.user_id}
+  token={route?.params?.token}
+  selectedDate={selectedDate}
+  room={selectedRoom}
+/>
+
     </View>
   );
 };
@@ -215,6 +224,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 8,
+    textAlign: "center",
   },
   icon: {
     marginLeft: 15,

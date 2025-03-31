@@ -22,6 +22,60 @@ const LoginScreen = () => {
   const [modalMessage, setModalMessage] = useState("");
   const [modalType, setModalType] = useState(""); // 'success' or 'error'
 
+  // const handleLogin = async () => {
+  //   if (!username || !password) {
+  //     setModalMessage("กรุณากรอกชื่อผู้ใช้และรหัสผ่าน");
+  //     setModalType("error");
+  //     setModalVisible(true);
+  //     return;
+  //   }
+
+  //   setLoading(true);
+
+  //   try {
+  //     const result = await LoginUser(username, password); // <-- Login API
+  //     const userId = result?.user?.id;
+  //     const name = result?.user?.name;
+
+  //     console.log("Login result:", result);
+
+  //     if (!userId) {
+  //       throw new Error("ไม่พบ user_id จากเซิร์ฟเวอร์");
+  //     }
+
+  //     setModalMessage("เข้าสู่ระบบเรียบร้อย");
+  //     setModalType("success");
+  //     setModalVisible(true);
+
+  //     setTimeout(() => {
+  //       navigation.reset({
+  //         index: 0,
+  //         routes: [
+  //           {
+  //             name: "Main",
+  //             params: { name, user_id: userId }, // ✅ ส่ง user_id และ name ไป Main
+  //           },
+  //         ],
+  //       });
+  //     }, 300);
+  //   } catch (error) {
+  //     setLoading(false);
+
+  //     console.log("Login Error:", error);
+
+  //     let errorMessage = "เข้าสู่ระบบไม่สำเร็จ";
+  //     if (error.response) {
+  //       errorMessage = error.response?.data?.message || errorMessage;
+  //     }
+
+  //     setModalMessage(errorMessage);
+  //     setModalType("error");
+  //     setModalVisible(true);
+  //   }
+
+  //   setLoading(false);
+  // };
+
   const handleLogin = async () => {
     if (!username || !password) {
       setModalMessage("กรุณากรอกชื่อผู้ใช้และรหัสผ่าน");
@@ -29,52 +83,54 @@ const LoginScreen = () => {
       setModalVisible(true);
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
       const result = await LoginUser(username, password); // <-- Login API
       const userId = result?.user?.id;
       const name = result?.user?.name;
-
+      const token = result?.token; // ✅ เพิ่มตรงนี้
+  
       console.log("Login result:", result);
-
-      if (!userId) {
-        throw new Error("ไม่พบ user_id จากเซิร์ฟเวอร์");
+  
+      if (!userId || !token) {
+        throw new Error("ไม่พบ user_id หรือ token จากเซิร์ฟเวอร์");
       }
-
+  
       setModalMessage("เข้าสู่ระบบเรียบร้อย");
       setModalType("success");
       setModalVisible(true);
-
+  
       setTimeout(() => {
         navigation.reset({
           index: 0,
           routes: [
             {
               name: "Main",
-              params: { name, user_id: userId }, // ✅ ส่ง user_id และ name ไป Main
+              params: { name, user_id: userId, token }, // ✅ ส่ง token ไปด้วย
             },
           ],
         });
       }, 300);
     } catch (error) {
       setLoading(false);
-
+  
       console.log("Login Error:", error);
-
+  
       let errorMessage = "เข้าสู่ระบบไม่สำเร็จ";
       if (error.response) {
         errorMessage = error.response?.data?.message || errorMessage;
       }
-
+  
       setModalMessage(errorMessage);
       setModalType("error");
       setModalVisible(true);
     }
-
+  
     setLoading(false);
   };
+  
 
   return (
     <View style={styles.container}>

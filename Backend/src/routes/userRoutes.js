@@ -481,7 +481,7 @@ export const getBorrowedItems = async (req, res) => {
 
   try {
     const sql = `
-      SELECT L.id AS loan_id, I.name, L.borrow_date, L.due_date
+      SELECT L.id AS loan_id, I.name, L.borrow_date, L.return_date
       FROM Loans L
       JOIN Items I ON L.item_id = I.id
       WHERE L.user_id = ? AND L.status = 'borrowed'

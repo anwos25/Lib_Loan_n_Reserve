@@ -81,7 +81,7 @@ const LoanStatusScreen = ({ navigation, route }) => {
             <Text style={styles.title}>{item.name}</Text>
             <Text style={styles.infoText}>Loan ID: {item.loan_id}</Text>
             <Text style={styles.infoText}>วันที่ยืม: {new Date(item.borrow_date).toLocaleDateString('th-TH')}</Text>
-            <Text style={styles.infoText}>กำหนดคืน: {new Date(item.due_date).toLocaleDateString('th-TH')}</Text>
+            <Text style={styles.infoText}>กำหนดคืน: {new Date(item.return_date).toLocaleDateString('th-TH')}</Text>
             <TouchableOpacity
               style={styles.button}
               onPress={() => handleReturnLoan(item.loan_id, item_id)}

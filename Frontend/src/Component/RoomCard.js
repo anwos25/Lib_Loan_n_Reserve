@@ -29,7 +29,7 @@ const BookingModal = ({ isVisible, onClose, onSave, room }) => {
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
           <Text style={styles.title}>จองห้อง</Text>
-          <Text style={styles.msg}>{room.name}</Text>
+          <Text style={styles.msg}>{room.room_name}</Text> 
           <Text style={styles.msg}>ความจุ: {room.capacity} คน</Text>
           
           {/* เลือกเวลาเริ่ม */}
@@ -70,46 +70,30 @@ const BookingModal = ({ isVisible, onClose, onSave, room }) => {
   );
 };
 
-const RoomCard = ({ room, roombooking }) => {
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [bookingDetails, setBookingDetails] = useState(null);
 
-  const handleBookingSave = (startTime, endTime) => {
-    setBookingDetails({ startTime, endTime });
-  };
-
+const RoomCard = ({ room, onPressBook }) => {
   return (
     <View style={styles.card}>
       <View style={styles.roomDetails}>
-        <Text style={styles.roomName}>{room.name}</Text>
+        <Text style={styles.roomName}>{room.room_name}</Text>
         <View style={styles.capacityContainer}>
           <Ionicons name="people" size={16} color="gray" />
           <Text style={styles.capacityText}>ความจุ: {room.capacity} คน</Text>
         </View>
       </View>
+
       <Text style={styles.roomStatus}>{room.status}</Text>
-      <TouchableOpacity style={styles.bookButton} onPress={() => setIsModalVisible(true)}>
+
+      <TouchableOpacity style={styles.bookButton} onPress={() => {
+        console.log("🔔 กำลังกดจองห้องจาก RoomCard:", room);
+        onPressBook(); // ✅ ส่ง event ไปให้ BookingScreen.js
+      }}>
         <Text style={styles.bookButtonText}>จองห้อง</Text>
       </TouchableOpacity>
-
-      {/* Booking Modal */}
-      <BookingModal
-        isVisible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-        onSave={handleBookingSave}
-        room={room}
-      />
-      
-      {/* แสดงข้อมูลการจองห้อง */}
-      {bookingDetails && (
-        <View style={styles.bookingInfo}>
-          <Text>เวลาเริ่ม: {bookingDetails.startTime}</Text>
-          <Text>เวลาจบ: {bookingDetails.endTime}</Text>
-        </View>
-      )}
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   card: {
@@ -227,3 +211,45 @@ const styles = StyleSheet.create({
 });
 
 export default RoomCard;
+
+
+//// const RoomCard = ({ room, roombooking }) => {
+//   const [isModalVisible, setIsModalVisible] = useState(false);
+//   const [bookingDetails, setBookingDetails] = useState(null);
+
+//   const handleBookingSave = (startTime, endTime) => {
+//     setBookingDetails({ startTime, endTime });
+//   };
+
+//   return (
+//     <View style={styles.card}>
+//       <View style={styles.roomDetails}>
+//         <Text style={styles.roomName}>{room.name}</Text>
+//         <View style={styles.capacityContainer}>
+//           <Ionicons name="people" size={16} color="gray" />
+//           <Text style={styles.capacityText}>ความจุ: {room.capacity} คน</Text>
+//         </View>
+//       </View>
+//       <Text style={styles.roomStatus}>{room.status}</Text>
+//       <TouchableOpacity style={styles.bookButton} onPress={() => setIsModalVisible(true)}>
+//         <Text style={styles.bookButtonText}>จองห้อง</Text>
+//       </TouchableOpacity>
+
+//       {/* Booking Modal */}
+//       <BookingModal
+//         isVisible={isModalVisible}
+//         onClose={() => setIsModalVisible(false)}
+//         onSave={handleBookingSave}
+//         room={room}
+//       />
+      
+//       {/* แสดงข้อมูลการจองห้อง */}
+//       {bookingDetails && (
+//         <View style={styles.bookingInfo}>
+//           <Text>เวลาเริ่ม: {bookingDetails.startTime}</Text>
+//           <Text>เวลาจบ: {bookingDetails.endTime}</Text>
+//         </View>
+//       )}
+//     </View>
+//   );
+// };
